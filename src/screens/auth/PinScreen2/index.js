@@ -11,7 +11,7 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-
+import Toast from "react-native-simple-toast";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import CountDown from "react-native-countdown-component";
 
@@ -33,6 +33,22 @@ import BackArrow from "../../../assets/images/svgs/backArrow.svg";
 const PinScreen1 = (props) => {
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // ====================== Confirm PIN function =====================
+
+  const OtpVerify = () => {
+    setIsLoading(true);
+
+    if (otpCode == "") {
+      Toast.show("Enter pin code", Toast.SHORT, ["UIAlertController"]);
+      setIsLoading(false);
+    } else {
+      props.navigation.navigate("LoginScreen");
+      setIsLoading(false);
+    }
+  };
+
+  // ========================  END  ===============================
 
   return (
     <View style={styles.mainContainer}>
@@ -89,7 +105,7 @@ const PinScreen1 = (props) => {
               marginTop={hp(3)}
               fontSize={wp(4)}
               fontFamily={fonts.medium}
-              onPress={() => props.navigation.navigate("LoginScreen")}
+              onPress={() => OtpVerify()}
             />
           </View>
         </ScrollView>

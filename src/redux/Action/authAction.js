@@ -1,9 +1,9 @@
 import { LOGIN_REQUEST, LOGOUT_REQUEST } from "./actionTypes";
 
-export function Login() {
+export function loginFun() {
   return { type: LOGIN_REQUEST };
 }
 
-export function logout() {
+export function logoutFun() {
   return { type: LOGOUT_REQUEST };
 }

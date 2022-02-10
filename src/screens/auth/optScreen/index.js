@@ -11,9 +11,9 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
-
 import OTPInputView from "@twotalltotems/react-native-otp-input";
 import CountDown from "react-native-countdown-component";
+import Toast from "react-native-simple-toast";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -37,6 +37,22 @@ const OTPScreen = (props) => {
 
   const OTPRef = useRef(null);
   const [timer, setTimer] = useState(true);
+
+  // ====================== OTP Verification function =====================
+
+  const OtpVerify = () => {
+    setIsLoading(true);
+
+    if (otpCode == "") {
+      Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
+      setIsLoading(false);
+    } else {
+      props.navigation.navigate("PinScreen1");
+      setIsLoading(false);
+    }
+  };
+
+  // ========================  END  ===============================
 
   return (
     <View style={styles.mainContainer}>
@@ -120,7 +136,7 @@ const OTPScreen = (props) => {
               marginTop={hp(3)}
               fontSize={wp(4)}
               fontFamily={fonts.medium}
-              onPress={() => props.navigation.navigate("PinScreen1")}
+              onPress={() => OtpVerify()}
             />
           </View>
         </ScrollView>
@@ -214,5 +230,12 @@ const styles = {
     color: "black",
     fontWeight: "bold",
     marginLeft: wp(0.9),
+  },
+  otpCodeTextStyle: {
+    textAlignVertical: "bottom",
+    textAlign: "center",
+    color: colors.gray,
+    fontSize: wp(3.5),
+    fontFamily: fonts.regular,
   },
 };

@@ -12,6 +12,7 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import CountryPicker from "react-native-country-picker-modal";
+import { useDispatch } from "react-redux";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -19,6 +20,7 @@ import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../assets/colors/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
+import { loginFun } from "../../../redux/Action/authAction";
 
 // ====================== END =================================
 
@@ -30,8 +32,11 @@ import DownArrow from "../../../assets/images/svgs/downArrow.svg";
 // ====================== END =================================
 
 const Login = (props) => {
+  const dispatch = useDispatch();
+
   const [countryCode, setCountryCode] = useState("PK");
   const [withFlag, setWithFlag] = useState(true);
+  const [withFilter, setWithFilter] = useState(true);
   const [country, setCountry] = useState(null);
   const [withCallingCode, setWithCallingCode] = useState("92");
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +57,7 @@ const Login = (props) => {
       <CountryPicker
         {...{
           countryCode,
-
+          withFilter,
           withFlag,
           onSelect,
         }}
@@ -147,7 +152,7 @@ const Login = (props) => {
               marginTop={hp(3)}
               fontSize={wp(4)}
               fontFamily={fonts.medium}
-              onPress={() => props.navigation.navigate("LoginScreen")}
+              onPress={() => dispatch(loginFun())}
             />
           </View>
         </ScrollView>

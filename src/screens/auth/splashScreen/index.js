@@ -74,7 +74,10 @@ const SplashScreen = (props) => {
             justifyContent="center"
             onPress={() => props.navigation.navigate("LoginScreen")}
           />
-          <TouchableOpacity style={{ marginTop: hp(3) }}>
+          <TouchableOpacity
+            style={{ marginTop: hp(3) }}
+            onPress={() => props.navigation.navigate("SignUPScreen")}
+          >
             <Text style={styles.registerTextStyle}>Register</Text>
           </TouchableOpacity>
         </View>

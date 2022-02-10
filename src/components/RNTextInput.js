@@ -26,6 +26,8 @@ const RNTextInput = (props) => {
           fontFamily: props.fontFamily,
           fontSize: props.fontSize,
           //alignSelf: "center",
+          marginTop: 5,
+          //backgroundColor: "red",
         }}
       />
     </View>

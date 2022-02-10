@@ -7,4 +7,8 @@ export const colors = {
   fieldsColor: "#F5F7F9",
   lightBlack: "#C0C1C3",
   otpBoxColor: "#F5F7F9",
+  gray: "#9D9D9D",
+  avatarBorderColor: "#C8E4FF",
+  bWhite: "#E5E5E5",
+  floatBtnColor: "#FFB0DC",
 };

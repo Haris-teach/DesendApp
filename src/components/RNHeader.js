@@ -11,7 +11,16 @@ export default function RNHeader(props) {
       <TouchableOpacity onPress={props.leftOnPress} style={styles.leftBtnStyle}>
         {!props.leftIcon ? null : props.leftIcon}
       </TouchableOpacity>
-      <Text style={{ alignSelf: "center" }}>{props.headerText}</Text>
+      <Text
+        style={{
+          alignSelf: "center",
+          color: props.headerTextColor,
+          fontSize: props.fontSize,
+          fontFamily: props.fontFamily,
+        }}
+      >
+        {props.headerText}
+      </Text>
       <TouchableOpacity
         onPress={props.rightOnPress}
         style={styles.leftBtnStyle}

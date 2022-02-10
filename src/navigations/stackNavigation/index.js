@@ -13,6 +13,8 @@ import SignUpScreen from "../../screens/auth/SignUpScreen";
 import OTPScreen from "../../screens/auth/optScreen";
 import PinScreen1 from "../../screens/auth/PinScreen1";
 import PinScreen2 from "../../screens/auth/PinScreen2";
+import ChatMainScreen from "../../screens/chatScreens/ChatMainScreen";
+import TabScreen from "../bottomNavigation";
 
 // ======================= END ==============================
 
@@ -30,7 +32,7 @@ const Stack = () => {
             headerShown: false,
           }}
         >
-          <RootStack.Screen name={"MailIndox"} component={MailInbox} />
+          <RootStack.Screen name={"Home"} component={TabScreen} />
         </RootStack.Navigator>
       </NavigationContainer>
     );
