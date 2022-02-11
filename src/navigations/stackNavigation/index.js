@@ -1,9 +1,10 @@
 //=================================== React Native Import Files =====================
 
-import React from "react";
+import React, { useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useSelector } from "react-redux";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 //======================================= Local Import Files ===============================
 
@@ -13,7 +14,7 @@ import SignUpScreen from "../../screens/auth/SignUpScreen";
 import OTPScreen from "../../screens/auth/optScreen";
 import PinScreen1 from "../../screens/auth/PinScreen1";
 import PinScreen2 from "../../screens/auth/PinScreen2";
-import ChatMainScreen from "../../screens/chatScreens/ChatMainScreen";
+
 import TabScreen from "../bottomNavigation";
 
 // ======================= END ==============================
@@ -22,6 +23,18 @@ const RootStack = createNativeStackNavigator();
 
 const Stack = () => {
   const isLogin = useSelector((state) => state.authReducer.isLogin);
+
+  // ================== Google SignIn ==============
+
+  useEffect(() => {
+    // initialize the Google SDK
+    GoogleSignin.configure({
+      webClientId:
+        "103479813970-buvuil1du3c0qlg8u2cp9rssbc5t8ee5.apps.googleusercontent.com",
+    });
+  }, []);
+
+  // ===================== END ==================
 
   const AfterLoginAppContainer = () => {
     return (

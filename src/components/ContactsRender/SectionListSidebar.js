@@ -381,26 +381,15 @@ var SectionListSidebar = function (_a, ref) {
           {...props}
           showsVerticalScrollIndicator={false}
         />
-        {/* <Animated.View
-          ref={sidebarRef}
-          style={[
-            styles.sidebarItemContainerStyle,
-            sidebarContainerStyle,
-            { opacity: sidebarOpacity },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          {visibleSidebar &&
-            defaultSidebarData
-              .map(function (item) {
-                return item.key;
-              })
-              .map(function (item, index) {
-                return renderSidebarItem === undefined
-                  ? renderDefaultSidebarItem({ item: item, index: index })
-                  : renderSidebarItem({ item: item, index: index });
-              })}
-        </Animated.View> */}
+        {/* 
+        <SectionList
+          sections={data}
+          renderSectionHeader={renderSectionHeader || defaultSectionHeader}
+          ref={ref}
+          keyExtractor={sectionKeyExtract}
+          getItemLayout={getItemLayout}
+          {...props}
+        /> */}
 
         <View
           ref={sidebarRef}
@@ -418,7 +407,7 @@ var SectionListSidebar = function (_a, ref) {
               })
               .map(function (item, index) {
                 return renderSidebarItem === undefined
-                  ? null
+                  ? renderDefaultSidebarItem({ item: item, index: index })
                   : renderSidebarItem({ item: item, index: index });
               })}
         </View>

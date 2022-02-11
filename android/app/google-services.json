@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "103479813970",
+    "project_id": "desend-3a0d8",
+    "storage_bucket": "desend-3a0d8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103479813970:android:7bedfe57ae4feb2d737c8b",
+        "android_client_info": {
+          "package_name": "com.desend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "103479813970-282fqlk3ihen5o1kjn9dkfg6o1kai3vf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.desend",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "103479813970-buvuil1du3c0qlg8u2cp9rssbc5t8ee5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAK3Z-cB-8FLu50d-5iVL_xIbG4i75vwTw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "103479813970-buvuil1du3c0qlg8u2cp9rssbc5t8ee5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -5,13 +5,13 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ImageBackground,
-  SectionList,
   StatusBar,
   Image,
   FlatList,
   Platform,
   ActivityIndicator,
   TextInput,
+  SectionList,
   PermissionsAndroid,
 } from "react-native";
 import {
@@ -19,6 +19,8 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import Contacts from "react-native-contacts";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useSelector, useDispatch } from "react-redux";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -26,9 +28,8 @@ import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../assets/colors/colors";
 import RNAvatar from "../../../components/RNAvatar";
 import ContactCardComponent from "../../../components/ContactCardComponent/ContactCardComponent";
-import Avatar from "../../../components/Avatar";
-import CustomContacts from "../../../components/ContactsRender/SectionListSidebar";
 import alphabets from "../../../components/alphabets";
+import { logoutFun } from "../../../redux/Action/authAction";
 
 // ====================== END =================================
 
@@ -40,6 +41,8 @@ import Search from "../../../assets/images/svgs/search.svg";
 // ====================== END =================================
 
 const ContactScreen = () => {
+  const dispatch = useDispatch();
+
   const [listData, setListData] = useState([
     {
       key: 1,
@@ -56,6 +59,12 @@ const ContactScreen = () => {
     },
     {
       key: 4,
+    },
+    {
+      key: 5,
+    },
+    {
+      key: 6,
     },
   ]);
   const [allSavedContacts, setAllSavedContacts] = useState([
@@ -129,6 +138,7 @@ const ContactScreen = () => {
         loadContacts();
       } else {
         console.log("Contact permission denied");
+        loadContacts();
       }
     } else {
       // if (allSavedContacts.length == 0) loadContacts();
@@ -180,6 +190,16 @@ const ContactScreen = () => {
     }
   }
 
+  const signOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      console.log("Logout from google:");
+      dispatch(logoutFun()); // Remember to remove the user from your app's state as well
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const renderItems = ({ item, index }) => {
     return (
       <ContactCardComponent
@@ -203,7 +223,7 @@ const ContactScreen = () => {
         callOnPress={() => console.log("Call Index:  ", index)}
         msgOnPress={() => console.log("Msg Index:    ", index)}
         hasThumbnail={item.image}
-        mainPress={() => console.log(" Index:    ", item)}
+        mainPress={() => signOut()}
       />
     );
   };
@@ -216,6 +236,11 @@ const ContactScreen = () => {
     const initials =
       textSplit[0].charAt(0) + textSplit[textSplit.length - 1].charAt(0);
     return initials;
+  };
+
+  var defaultSectionHeader = function (_a) {
+    var section = _a.section;
+    return <Text style={styles.sectionHeaderStyle}>{section.title}</Text>;
   };
 
   return (
@@ -267,8 +292,8 @@ const ContactScreen = () => {
           />
         </View>
 
-        <View style={{ marginTop: hp(4) }}>
-          <CustomContacts
+        <View style={{ marginTop: hp(4), flex: 0.9 }}>
+          {/* <CustomContacts
             ref={sectionList}
             data={sortedArray}
             renderItem={renderItems}
@@ -276,6 +301,15 @@ const ContactScreen = () => {
             sectionHeaderHeight={20}
             refreshing={isLoading}
             onRefresh={() => loadContacts()}
+          /> */}
+          <SectionList
+            keyExtractor={(item, index) => `${item.key}+${index}`}
+            refreshing={isLoading}
+            onRefresh={() => loadContacts()}
+            renderSectionHeader={defaultSectionHeader}
+            sections={sortedArray}
+            renderItem={renderItems}
+            showsVerticalScrollIndicator={false}
           />
         </View>
       </View>
@@ -319,6 +353,16 @@ const styles = {
     color: colors.black,
     alignSelf: "center",
     fontSize: wp(4.5),
+    fontFamily: fonts.medium,
+  },
+  sectionHeaderStyle: {
+    textAlignVertical: "center",
+    fontSize: wp(5),
+    color: "#C0C1C3",
+    fontWeight: "600",
+    marginHorizontal: wp(6),
+    marginLeft: wp(12),
+    marginVertical: hp(1),
     fontFamily: fonts.medium,
   },
 };

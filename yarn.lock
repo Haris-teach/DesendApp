@@ -1272,10 +1272,20 @@
     "opencollective-postinstall" "^2.0.1"
     "superstruct" "^0.6.2"
 
+"@react-native-firebase/auth@^14.2.2":
+  "integrity" "sha512-/nPSCi99/Z4SE5y/G6+4i2vYN5p4nCb6zw4wIsLUMIH91yzYP5yf8UYN7Ok3ImihvrGRYTO0vCzL7xSCnuvPZA=="
+  "resolved" "https://registry.npmjs.org/@react-native-firebase/auth/-/auth-14.3.2.tgz"
+  "version" "14.3.2"
+
 "@react-native-firebase/messaging@^14.2.2":
   "integrity" "sha512-TLp4ugWlFa8JbMe6TrTfzRepcxKuJfzmwC9t7sykgAwpaX6rNOj87EdWAErQyZG2UONPvPzQPIRJqNHFIargtw=="
   "resolved" "https://registry.npmjs.org/@react-native-firebase/messaging/-/messaging-14.3.0.tgz"
   "version" "14.3.0"
+
+"@react-native-google-signin/google-signin@^7.0.4":
+  "integrity" "sha512-N5uVDlTp/mgpa5gFr6VIr8pldt68jlmHOlqcTSnSwBuZXusXMiK53DCIOWuYk4OJ1rlb8Esa9J4FJwUB0psU9Q=="
+  "resolved" "https://registry.npmjs.org/@react-native-google-signin/google-signin/-/google-signin-7.0.4.tgz"
+  "version" "7.0.4"
 
 "@react-native/assets@1.0.0":
   "integrity" "sha512-KrwSpS1tKI70wuKl68DwJZYEvXktDHdZMG0k2AXD/rJVSlB23/X2CB2cutVR0HwNMJIal9HOUOBB2rVfa6UGtQ=="

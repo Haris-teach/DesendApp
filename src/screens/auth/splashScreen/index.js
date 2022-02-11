@@ -5,6 +5,8 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
+import auth from "@react-native-firebase/auth";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 // ====================== Local Import =======================
 
@@ -25,6 +27,21 @@ import Apple from "../../../assets/images/svgs/apple.svg";
 
 const SplashScreen = (props) => {
   const [isLoading, setIsLoading] = useState(false);
+
+  // ================== Google auth ============================
+
+  async function onGoogleButtonPress() {
+    // Get the users ID token
+    const { idToken } = await GoogleSignin.signIn();
+
+    // Create a Google credential with the token
+    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+    // Sign-in the user with the credential
+    return auth().signInWithCredential(googleCredential);
+  }
+
+  // =================== END ===================================
 
   return (
     <ImageBackground
@@ -47,7 +64,21 @@ const SplashScreen = (props) => {
             <TouchableOpacity>
               <FaceBook />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                onGoogleButtonPress()
+                  .then(() => {
+                    console.log("Signed in with Google!");
+                    const getCurrentUser = async () => {
+                      const currentUser = await GoogleSignin.getCurrentUser();
+                      console.log("Current user:  ", currentUser);
+                    };
+                  })
+                  .then(() => {
+                    props.navigation.navigate("LoginScreen");
+                  })
+              }
+            >
               <Apple />
             </TouchableOpacity>
             <TouchableOpacity>
