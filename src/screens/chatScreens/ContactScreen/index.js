@@ -293,15 +293,6 @@ const ContactScreen = () => {
         </View>
 
         <View style={{ marginTop: hp(4), flex: 0.9 }}>
-          {/* <CustomContacts
-            ref={sectionList}
-            data={sortedArray}
-            renderItem={renderItems}
-            itemHeight={30}
-            sectionHeaderHeight={20}
-            refreshing={isLoading}
-            onRefresh={() => loadContacts()}
-          /> */}
           <SectionList
             keyExtractor={(item, index) => `${item.key}+${index}`}
             refreshing={isLoading}
