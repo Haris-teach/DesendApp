@@ -15,9 +15,9 @@ import {
 
 import { colors } from "../../assets/colors/colors";
 
-import ChatMainScreen from "../../screens/chatScreens/ChatMainScreen";
-import SettingScreen from "../../screens/chatScreens/SettingScreen";
-import ContactScreen from "../../screens/chatScreens/ContactScreen";
+import ChatMainScreen from "../../screens/othersScreens/ChatMainScreen";
+import SettingScreen from "../../screens/othersScreens/SettingScreen";
+import ContactScreen from "../../screens/othersScreens/ContactScreen";
 //==============================================================
 
 // ===================SVGS====================
