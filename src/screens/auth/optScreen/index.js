@@ -18,9 +18,10 @@ import Toast from "react-native-simple-toast";
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
 import fonts from "../../../assets/fonts/fonts";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
+import { getOtp } from "../../../httputils/httputils";
 
 // ====================== END =================================
 
@@ -35,8 +36,26 @@ const OTPScreen = (props) => {
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  //console.log(props.route.params.phoneNumber, props.route.params.otp);
+
   const OTPRef = useRef(null);
   const [timer, setTimer] = useState(true);
+
+  const getOTPAgain = () => {
+    setIsLoading(true);
+    let params = {
+      phone: props.route.params.phoneNumber,
+    };
+
+    getOtp(params).then((res) => {
+      if (res.status == 1) {
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+      }
+    });
+  };
 
   // ====================== OTP Verification function =====================
 
@@ -46,8 +65,11 @@ const OTPScreen = (props) => {
     if (otpCode == "") {
       Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
-    } else {
+    } else if (otpCode == props.route.params.otp) {
       props.navigation.navigate("PinScreen1");
+      setIsLoading(false);
+    } else {
+      Toast.show("Code is not verify", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
     }
   };
@@ -97,6 +119,7 @@ const OTPScreen = (props) => {
                 <TouchableOpacity
                   onPress={() => {
                     setTimer(!timer);
+                    getOTPAgain();
                   }}
                 >
                   <Text style={styles.otpResendTextStyle}>Resend</Text>

@@ -48,3 +48,6 @@ android/keystores/debug.keystore
 
 # CocoaPods
 /ios/Pods/
+android/java_pid21999.hprof
+android/java_pid22714.hprof
+android/java_pid23670.hprof

@@ -5,31 +5,53 @@ const RNTextInput = (props) => {
   return (
     <View
       style={{
+        flexDirection: props.flexDirection,
         height: props.height,
         width: props.width,
-        justifyContent: "center",
+        justifyContent: props.justifyContent,
         backgroundColor: props.backgroundColor,
         borderRadius: props.borderRadius,
         marginHorizontal: props.marginHorizontal,
         marginTop: props.marginTop,
       }}
     >
-      <TextInput
-        placeholder={props.placeholder}
-        placeholderTextColor={props.placeholderTextColor}
-        editable={props.editable}
-        keyboardType={props.keyboardType}
-        style={{
-          color: "black",
-          height: props.height,
-          marginLeft: props.marginLeft,
-          fontFamily: props.fontFamily,
-          fontSize: props.fontSize,
-          //alignSelf: "center",
-          marginTop: 5,
-          //backgroundColor: "red",
-        }}
-      />
+      {!props.text ? (
+        <TextInput
+          placeholder={props.placeholder}
+          placeholderTextColor={props.placeholderTextColor}
+          editable={props.editable}
+          keyboardType={props.keyboardType}
+          onChangeText={props.onChangeText}
+          value={props.value}
+          onBlur={props.onBlur}
+          maxLength={props.maxLength}
+          secureTextEntry={props.secureTextEntry}
+          //secureTextEntry={true}
+          style={{
+            color: "black",
+            height: props.height,
+            marginLeft: props.marginLeft,
+            fontFamily: props.fontFamily,
+            fontSize: props.fontSize,
+            //alignSelf: "center",
+            marginTop: 5,
+            //backgroundColor: "red",
+          }}
+        />
+      ) : (
+        <Text
+          style={{
+            color: "black",
+            height: props.height,
+            marginLeft: props.marginLeft,
+            fontFamily: props.fontFamily,
+            fontSize: props.fontSize,
+            alignSelf: "center",
+          }}
+        >
+          {props.text}
+        </Text>
+      )}
     </View>
   );
 };

@@ -9,7 +9,7 @@ import { View, StyleSheet, TouchableOpacity, Image, Text } from "react-native";
 
 //================================ Local Imported Files ======================================//
 
-import { colors } from "../../assets/colors/colors";
+import { colors } from "../../constants/colors";
 import fonts from "../../assets/fonts/fonts";
 import Msg from "../../assets/images/svgs/msg.svg";
 import Call from "../../assets/images/svgs/call.svg";
@@ -24,6 +24,7 @@ const ContactCardComponent = (props) => {
         // props.selected && {backgroundColor: colors.app_black},
       ]}
       onPress={props.mainPress}
+      onLongPress={props.onLongPress}
     >
       <View
         style={{

@@ -1,130 +1,50 @@
-import { View, Text, ImageBackground, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
-import LinearGradient from "react-native-linear-gradient";
+import {
+  View,
+  Text,
+  ImageBackground,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
+import React, {useState} from 'react';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
-} from "react-native-responsive-screen";
-import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { LoginManager, AccessToken } from "react-native-fbsdk-next";
+} from 'react-native-responsive-screen';
 
 // ====================== Local Import =======================
 
-import { pngs } from "../../../assets/images/pngs/png";
-import { colors } from "../../../assets/colors/colors";
-import fonts from "../../../assets/fonts/fonts";
-import RNButton from "../../../components/RNButton";
+import {pngs} from '../../../assets/images/pngs/png';
+import {colors} from '../../../constants/colors';
+import fonts from '../../../assets/fonts/fonts';
+import RNButton from '../../../components/RNButton';
 
 // ====================== END =================================
 
-// =================== SVGS IMPORT ===========================
-
-import FaceBook from "../../../assets/images/svgs/faceBook.svg";
-import Twitter from "../../../assets/images/svgs/twitter.svg";
-import Apple from "../../../assets/images/svgs/apple.svg";
-
-// ====================== END =================================
-
-const SplashScreen = (props) => {
+const SplashScreen = props => {
   const [isLoading, setIsLoading] = useState(false);
 
-  // ================== Google auth ============================
+  const isDarkMode = useColorScheme() === 'dark';
 
-  async function onGoogleButtonPress() {
-    // Get the users ID token
-    const { idToken } = await GoogleSignin.signIn();
-
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(googleCredential);
-  }
-
-  // =================== END ===================================
-
-  // ================== Facebook Login =========================
-  const onFacebookButtonPress = async () => {
-    // Attempt login with permissions
-    const result = await LoginManager.logInWithPermissions([
-      "public_profile",
-      "email",
-    ]);
-
-    if (result.isCancelled) {
-      throw "User cancelled the login process";
-    }
-
-    // Once signed in, get the users AccesToken
-    const data = await AccessToken.getCurrentAccessToken();
-
-    if (!data) {
-      throw "Something went wrong obtaining access token";
-    }
-
-    // Create a Firebase credential with the AccessToken
-    const facebookCredential = auth.FacebookAuthProvider.credential(
-      data.accessToken
-    );
-
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(facebookCredential);
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? colors.darker : colors.lighter,
   };
-
-  // ===================  END ==================================
 
   return (
     <ImageBackground
       source={pngs.splash}
       style={styles.container}
-      resizeMode="cover"
-    >
+      resizeMode="cover">
       <LinearGradient
         colors={[colors.splashLinear1, colors.splashLinear2]}
         style={styles.container}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 3 }}
-      >
+        start={{x: 0, y: 0}}
+        end={{x: 0, y: 3}}>
         <View style={styles.logoContainer}>
           <Text style={styles.logoTextStyle}>LOGO</Text>
         </View>
 
-        <View style={styles.subContainer}>
-          <View style={styles.svgContainer}>
-            <TouchableOpacity>
-              <FaceBook />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                onGoogleButtonPress()
-                  .then(() => {
-                    console.log("Signed in with Google!");
-                    const getCurrentUser = async () => {
-                      const currentUser = await GoogleSignin.getCurrentUser();
-                      console.log("Current user:  ", currentUser);
-                    };
-                  })
-                  .then(() => {
-                    props.navigation.navigate("LoginScreen");
-                  })
-              }
-            >
-              <Apple />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Twitter />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                onFacebookButtonPress().then(() =>
-                  console.log("Signed in with Facebook!")
-                )
-              }
-            >
-              <FaceBook />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <View style={styles.subContainer}></View>
 
         <View style={styles.footerContainer}>
           <RNButton
@@ -139,12 +59,11 @@ const SplashScreen = (props) => {
             fontSize={wp(4)}
             fontFamily={fonts.medium}
             justifyContent="center"
-            onPress={() => props.navigation.navigate("LoginScreen")}
+            onPress={() => props.navigation.navigate('LoginScreen')}
           />
           <TouchableOpacity
-            style={{ marginTop: hp(3) }}
-            onPress={() => props.navigation.navigate("SignUPScreen")}
-          >
+            style={{marginTop: hp(3)}}
+            onPress={() => props.navigation.navigate('SignUPScreen')}>
             <Text style={styles.registerTextStyle}>Register</Text>
           </TouchableOpacity>
         </View>
@@ -161,27 +80,27 @@ const styles = {
   },
   logoContainer: {
     flex: 0.6,
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   logoTextStyle: {
-    alignSelf: "center",
+    alignSelf: 'center',
     color: colors.white,
     fontSize: wp(15),
   },
   subContainer: {
     flex: 0.25,
     marginHorizontal: wp(25),
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   svgContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  footerContainer: { flex: 0.25 },
+  footerContainer: {flex: 0.25},
   registerTextStyle: {
     color: colors.loginBtnColor,
     fontSize: wp(5),
     fontFamily: fonts.medium,
-    alignSelf: "center",
+    alignSelf: 'center',
   },
 };

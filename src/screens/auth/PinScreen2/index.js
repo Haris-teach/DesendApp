@@ -13,14 +13,16 @@ import {
 } from "react-native-responsive-screen";
 import Toast from "react-native-simple-toast";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
-import CountDown from "react-native-countdown-component";
+import { useDispatch, useSelector } from "react-redux";
+var FormData = require("form-data");
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
 import fonts from "../../../assets/fonts/fonts";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
+import { userRegister } from "../../../httputils/httputils";
 
 // ====================== END =================================
 
@@ -31,6 +33,15 @@ import BackArrow from "../../../assets/images/svgs/backArrow.svg";
 // ====================== END =================================
 
 const PinScreen1 = (props) => {
+  const dispatch = useDispatch();
+
+  const firstName = useSelector((state) => state.authReducer.firstName);
+  const lastName = useSelector((state) => state.authReducer.lastName);
+  const phone = useSelector((state) => state.authReducer.isPhone);
+  const profilePic = useSelector((state) => state.authReducer.profilePic);
+
+  // console.log("ProfilePic:   ", profilePic, lastName, phone);
+
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,13 +53,37 @@ const PinScreen1 = (props) => {
     if (otpCode == "") {
       Toast.show("Enter pin code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
-    } else {
-      props.navigation.navigate("LoginScreen");
+    } else if (otpCode != props.route.params.pin) {
+      Toast.show("Pin code is not same", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
+    } else {
+      SignUP();
     }
   };
 
   // ========================  END  ===============================
+
+  // ====================== User Register ========================
+
+  const SignUP = () => {
+    var data = new FormData();
+    data.append("profileImg", profilePic);
+    data.append("phone", phone);
+    data.append("password", otpCode);
+    data.append("firstName", firstName);
+    data.append("lastName", lastName);
+
+    userRegister(data).then((res) => {
+      if (res.status == 1) {
+        props.navigation.navigate("LoginScreen");
+        setIsLoading(false);
+      } else {
+        Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+        setIsLoading(false);
+      }
+    });
+  };
+  // ====================== END =================================
 
   return (
     <View style={styles.mainContainer}>
@@ -56,7 +91,7 @@ const PinScreen1 = (props) => {
         leftIcon={<BackArrow alignSelf="center" />}
         leftOnPress={() => props.navigation.goBack()}
       />
-      <Text style={styles.loginTextStyle}>Create Your Pin</Text>
+      <Text style={styles.loginTextStyle}>Confirm Your Pin</Text>
 
       {/* ====================== White BackGround ================= */}
 

@@ -17,7 +17,7 @@ import OTPInputView from "@twotalltotems/react-native-otp-input";
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
 import fonts from "../../../assets/fonts/fonts";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
 
@@ -43,7 +43,7 @@ const PinScreen1 = (props) => {
       Toast.show("Enter pin code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
     } else {
-      props.navigation.navigate("PinScreen2");
+      props.navigation.navigate("PinScreen2", { pin: otpCode });
       setIsLoading(false);
     }
   };
