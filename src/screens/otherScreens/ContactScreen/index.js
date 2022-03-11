@@ -20,8 +20,9 @@ import {
 } from "react-native-responsive-screen";
 import Contacts from "react-native-contacts";
 import { useIsFocused } from "@react-navigation/native";
-
+import { Dialog } from "react-native-simple-dialogs";
 import { useSelector, useDispatch } from "react-redux";
+import Toast from "react-native-simple-toast";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -32,6 +33,7 @@ import ContactCardComponent from "../../../components/ContactCardComponent/Conta
 import alphabets from "../../../components/alphabets";
 import { SignOut } from "../../../../redux/actions/authActions";
 import { contactsync, getContact } from "../../../httputils/httputils";
+import { ContactSave } from "../../../../redux/actions/authActions";
 
 // ====================== END =================================
 
@@ -46,6 +48,7 @@ const ContactScreen = (props) => {
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
   const token = useSelector((state) => state.authReducer.token);
+  const isProfile = useSelector((state) => state.authReducer.uri);
   const sortedArray = [];
   const [listData, setListData] = useState([
     {
@@ -81,6 +84,7 @@ const ContactScreen = (props) => {
   const [multiUserName, setMultiUserName] = useState([]);
   const [multiUserPhone, setMultiUserPhone] = useState([]);
   const [multiUserProfile, setMultiUserProfile] = useState([]);
+  const [isDialogVisible, setIsDialogVisible] = useState(false);
 
   useEffect(() => {
     getContacts();
@@ -125,24 +129,29 @@ const ContactScreen = (props) => {
         let params = {
           contacts: array,
         };
+        let param = {
+          contacts: contacts,
+        };
         contactsync(params, token).then((res) => {
           if (res.status == 1) {
-            getContact(token).then((res) => {
+            getContact(param, token).then((res) => {
               if (res.status == 1) {
                 allSavedContacts.splice(0, allSavedContacts.length);
-                res.contacts.map((i) => {
+                res.users.map((i) => {
                   let obj = {
-                    recordID: i.contactList.id,
-                    familyName: i.contactList.lastName,
-                    givenName: `${i.contactList.firstName} ${i.contactList.lastName}`,
+                    recordID: i.id,
+                    familyName: i.lastName,
+                    givenName: `${i.firstName} ${i.lastName}`,
                     isFavorite: false,
-                    phoneNumbers: [i.contactList.phone],
-                    createdAt: i.contactList.createdAt,
-                    thumbnailPath: i.contactList.profileImg,
+                    phoneNumbers: [i.phone],
+                    createdAt: i.createdAt,
+                    thumbnailPath: i.profileImg,
+                    isRegister: i.isregister,
                   };
                   allSavedContacts.push(obj);
                   setAllSavedContacts(allSavedContacts);
                 });
+                dispatch(ContactSave(allSavedContacts));
                 setIsLoading(false);
               } else {
                 setIsLoading(false);
@@ -189,25 +198,30 @@ const ContactScreen = (props) => {
         selected={selectedIndex == item.recordID ? true : false}
         image={
           <View style={styles.DPcontainerStyle}>
-            {item.hasThumbnail ? (
-              <Image
-                source={{ uri: item.thumbnailPath }}
-                style={styles.DPStyle}
-              />
-            ) : (
-              <Text style={styles.contactNameStyle}>
-                {getAvatarInitials(item.givenName)}
-              </Text>
-            )}
+            <Image
+              source={{
+                uri:
+                  item.thumbnailPath == ""
+                    ? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
+                    : item.thumbnailPath,
+              }}
+              style={styles.DPStyle}
+            />
           </View>
         }
         name={item.givenName}
         data={item}
-        callOnPress={() => console.log("Call Index:  ", index)}
+        callOnPress={() =>
+          Toast.showWithGravity(
+            "Call feature in developement mode",
+            Toast.SHORT,
+            Toast.BOTTOM
+          )
+        }
         // msgOnPress={() => console.log("Msg Index:    ", index)}
         hasThumbnail={item.image}
         msgOnPress={() => {
-          if (isLongPress) {
+          if (item.isRegister && isLongPress) {
             multiUserId.push(item.recordID);
             setMultiUserId(multiUserId);
             multiUserName.push(item.givenName);
@@ -216,45 +230,38 @@ const ContactScreen = (props) => {
             setMultiUserPhone(multiUserPhone);
             multiUserProfile.push(item.thumbnailPath);
             setMultiUserProfile(multiUserProfile);
-          } else {
+          } else if (item.isRegister && !isLongPress) {
             props.navigation.navigate("ChatRoom", {
               userName: item.givenName,
               userId: [item.recordID],
               userProfile: item.thumbnailPath,
               userNumber: item.phoneNumbers,
             });
+          } else {
+            setIsDialogVisible(true);
           }
         }}
         mainPress={() => {
-          if (isLongPress) {
-            multiUserId.push(item.recordID);
-            setMultiUserId(multiUserId);
-            multiUserName.push(item.givenName);
-            setMultiUserName(multiUserName);
-            multiUserPhone.push(item.phoneNumbers);
-            setMultiUserPhone(multiUserPhone);
-            multiUserProfile.push(item.thumbnailPath);
-            setMultiUserProfile(multiUserProfile);
-          } else {
-            props.navigation.navigate("ChatRoom", {
-              userName: item.givenName,
-              userId: [item.recordID],
-              userProfile: item.thumbnailPath,
-              userNumber: item.phoneNumbers,
-            });
+          if (!item.isRegister) {
+            setIsDialogVisible(true);
           }
         }}
         onLongPress={() => {
           setIsLongPress(true);
-          multiUserId.push(item.recordID);
-          setMultiUserId(multiUserId);
-          multiUserName.push(item.givenName);
-          setMultiUserName(multiUserName);
-          multiUserPhone.push(item.phoneNumbers);
-          setMultiUserPhone(multiUserPhone);
-          multiUserProfile.push(item.thumbnailPath);
-          setMultiUserProfile(multiUserProfile);
+          if (item.isRegister) {
+            multiUserId.push(item.recordID);
+            setMultiUserId(multiUserId);
+            multiUserName.push(item.givenName);
+            setMultiUserName(multiUserName);
+            multiUserPhone.push(item.phoneNumbers);
+            setMultiUserPhone(multiUserPhone);
+            multiUserProfile.push(item.thumbnailPath);
+            setMultiUserProfile(multiUserProfile);
+          } else {
+            setIsDialogVisible(true);
+          }
         }}
+        isIcons={true}
       />
     );
   };
@@ -274,8 +281,41 @@ const ContactScreen = (props) => {
     return <Text style={styles.sectionHeaderStyle}>{section.title}</Text>;
   };
 
+  const RenderModal = () => {
+    return (
+      <Dialog
+        visible={isDialogVisible}
+        title="User not register "
+        onTouchOutside={() => setIsDialogVisible(false)}
+        dialogStyle={{ borderRadius: wp(4) }}
+      >
+        <Text>Send invite message</Text>
+        <View style={styles.dialogBtnContainerStyle}>
+          <TouchableOpacity
+            style={[
+              styles.dialogBtnStyle,
+              { backgroundColor: colors.fieldsColor },
+            ]}
+            onPress={() => setIsDialogVisible(false)}
+          >
+            <Text style={{ alignSelf: "center" }}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.dialogBtnStyle,
+              { backgroundColor: colors.loginBtnColor },
+            ]}
+          >
+            <Text style={{ alignSelf: "center" }}>Send</Text>
+          </TouchableOpacity>
+        </View>
+      </Dialog>
+    );
+  };
+
   return (
     <View style={styles.mainContainer}>
+      {RenderModal()}
       <RNHeader
         leftIcon={<BackArrow alignSelf="center" />}
         leftOnPress={() => dispatch(SignOut())}
@@ -340,17 +380,27 @@ const ContactScreen = (props) => {
         </View>
 
         <View style={{ marginTop: hp(4), flex: 0.85 }}>
-          <SectionList
-            keyExtractor={(item, index) => `${item.key}+${index}`}
-            refreshing={isLoading}
-            onRefresh={() => {
-              loadContacts();
-            }}
-            renderSectionHeader={defaultSectionHeader}
-            sections={sortedArray}
-            renderItem={renderItems}
-            showsVerticalScrollIndicator={false}
-          />
+          {isLoading ? (
+            <ActivityIndicator
+              color={colors.black}
+              style={styles.activityIndicatorStyle}
+            />
+          ) : (
+            // ) : sortedArray.length == 0 ? (
+            //   <Text style={styles.noThreadStyle}>Contacts not found</Text>
+            // )
+            <SectionList
+              keyExtractor={(item, index) => `${item.key}+${index}`}
+              refreshing={isLoading}
+              onRefresh={() => {
+                loadContacts();
+              }}
+              renderSectionHeader={defaultSectionHeader}
+              sections={sortedArray}
+              renderItem={renderItems}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
       </View>
     </View>
@@ -376,9 +426,9 @@ const styles = {
     paddingTop: hp(0.3),
   },
   DPStyle: {
-    width: wp(16),
-    height: wp(16),
-    borderRadius: wp(16),
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(15),
     alignSelf: "center",
   },
   DPcontainerStyle: {
@@ -386,7 +436,7 @@ const styles = {
     height: wp(16),
     borderRadius: wp(16),
     borderColor: colors.gray,
-    borderWidth: 1,
+    borderWidth: 0.2,
     justifyContent: "center",
   },
   contactNameStyle: {
@@ -418,5 +468,30 @@ const styles = {
     color: colors.black,
     fontWeight: "bold",
     alignSelf: "center",
+  },
+  noThreadStyle: {
+    alignSelf: "center",
+    marginTop: hp(20),
+    fontFamily: fonts.regular,
+    color: colors.black,
+  },
+  activityIndicatorStyle: {
+    backgroundColor: "white",
+    width: wp(8),
+    height: wp(8),
+    borderRadius: wp(8),
+    alignSelf: "center",
+    marginTop: hp(3),
+  },
+  dialogBtnStyle: {
+    width: wp(30),
+    height: hp(5),
+    justifyContent: "center",
+    borderRadius: wp(2),
+  },
+  dialogBtnContainerStyle: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: hp(3),
   },
 };

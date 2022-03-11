@@ -3,23 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>103479813970-lipg4pdfg7ou7evohvig50s08v23g2h5.apps.googleusercontent.com</string>
+	<string>902895208558-f5j8kn6uorotdfs2ia3sl5rp1vhknh14.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.103479813970-lipg4pdfg7ou7evohvig50s08v23g2h5</string>
+	<string>com.googleusercontent.apps.902895208558-f5j8kn6uorotdfs2ia3sl5rp1vhknh14</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>103479813970-ggqgsnrm6cgfgis914urtoglcfnanlhh.apps.googleusercontent.com</string>
+	<string>902895208558-31f7u7q60oh4ch0ausanglnfltd3q49k.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyDDw_RtLW6UiN4CN4zBksLMjPseYWruipg</string>
+	<string>AIzaSyBQaV5d-t4PPufeMT4dVLBVFGiLrhlZusc</string>
 	<key>GCM_SENDER_ID</key>
-	<string>103479813970</string>
+	<string>902895208558</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.argon.desend</string>
+	<string>com.desend.app</string>
 	<key>PROJECT_ID</key>
-	<string>desend-3a0d8</string>
+	<string>desend-a31f6</string>
 	<key>STORAGE_BUCKET</key>
-	<string>desend-3a0d8.appspot.com</string>
+	<string>desend-a31f6.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:103479813970:ios:ec866bbc642fd3a9737c8b</string>
+	<string>1:902895208558:ios:ec7497520bea316bde7e7f</string>
 </dict>
 </plist>

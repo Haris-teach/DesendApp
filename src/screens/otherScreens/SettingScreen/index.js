@@ -1,19 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  View,
-  Text,
-  SafeAreaView,
-  TouchableOpacity,
-  ImageBackground,
-  StatusBar,
-  Image,
-  FlatList,
-  Platform,
-  ActivityIndicator,
-  TextInput,
-  SectionList,
-  PermissionsAndroid,
-} from "react-native";
+import { View, Text, ScrollView, Image } from "react-native";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
@@ -34,14 +20,20 @@ import RNTextInput from "../../../components/RNTextInput";
 // =================== SVGS IMPORT ===========================
 
 import BackArrow from "../../../assets/images/svgs/backArrow.svg";
-import Search from "../../../assets/images/svgs/search.svg";
-import { ScrollView } from "react-native-gesture-handler";
+import RightArrow from "../../../assets/images/svgs/rightArrow.svg";
 
 // ====================== END =================================
 
 const SettingScreen = (props) => {
   const dispatch = useDispatch();
+  const firstName = useSelector((state) => state.authReducer.firstName);
+  const lastName = useSelector((state) => state.authReducer.lastName);
+  const phone = useSelector((state) => state.authReducer.phone);
+  const profileUri = useSelector((state) => state.authReducer.uri);
 
+  const [isPushNoti, setIsPushNoti] = useState(false);
+  const [isChat, setIsChat] = useState(false);
+  const [isDisapper, setIsDisapper] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   return (
@@ -52,71 +44,276 @@ const SettingScreen = (props) => {
         headerText="   "
       />
 
-      {/* <View style={styles.subContainerStyle}></View> */}
-      <ScrollView>
-        <Text style={styles.loginTextStyle}>Settings</Text>
-        {/* <View style={styles.subContainerStyle}>
-          <RNAvatar
-            width={wp(30)}
-            height={wp(30)}
-            borderRadius={wp(30)}
-            viewWidth={wp(30)}
-            viewHeight={wp(30)}
-            viewBorderRadius={wp(30)}
-            source={require("../../../assets/images/pngs/splash.png")}
-            resizeMode="cover"
-            justifyContent="center"
-            alignSelf="center"
-            marginTop={hp(3)}
-          />
-          <Text
-            style={{
-              color: "#232323",
-              fontFamily: fonts.medium,
-              fontSize: wp(5.5),
-              alignSelf: "center",
-              marginTop: hp(1),
-            }}
-          >
-            Eon John Paul
-          </Text>
-
-          <Text
-            style={{
-              color: colors.black,
-              fontFamily: fonts.light,
-              fontSize: wp(4.3),
-              alignSelf: "center",
-            }}
-          >
-            +86 132 6737 3838
-          </Text>
-          <Text
-            style={{
-              color: colors.black,
-              fontFamily: fonts.light,
-              fontSize: wp(4.3),
-              alignSelf: "center",
-              marginTop: hp(0.5),
-            }}
-          >
-            What craves you carves you
-          </Text>
-          <TouchableOpacity>
-            <RNTextInput
-              height={hp(6)}
-              borderRadius={wp(3)}
-              fontFamily={fonts.regular}
-              fontSize={wp(4)}
-              backgroundColor={colors.bWhite}
-              marginHorizontal={wp(8)}
-              marginTop={hp(2)}
-              text="Profile"
-              justifyContent="center"
+      <Text style={styles.loginTextStyle}>Settings</Text>
+      <View style={styles.subContainerStyle}>
+        <View style={{ height: hp(72) }}>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <Image
+              source={{
+                uri:
+                  profileUri == ""
+                    ? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
+                    : profileUri,
+              }}
+              style={styles.DPStyle}
+              resizeMode="contain"
             />
-          </TouchableOpacity>
-        </View> */}
-      </ScrollView>
+            <Text style={styles.contactNameStyle}>
+              {firstName + " " + lastName}
+            </Text>
+            <Text style={styles.phoneNumberStyle}>{phone}</Text>
+            <Text style={styles.descriptionStyle}>
+              What craves you carves you
+            </Text>
+
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(4)}
+              text="Profile"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Blocked Contacts"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Reset Pin"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Wallet Settings"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Push Notifications"
+              isToggel={true}
+              offColor={colors.white}
+              onColor={colors.white}
+              bgOnColor={colors.white}
+              bgoffColor={colors.black}
+              swithContorl={() => setIsPushNoti(!isPushNoti)}
+              on={isPushNoti}
+              borderColor={colors.lightBlack}
+              circleBColor={!isPushNoti ? colors.black : colors.lightBlack}
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Chat BackUp"
+              isToggel={true}
+              offColor={colors.white}
+              onColor={colors.white}
+              bgOnColor={colors.white}
+              bgoffColor={colors.black}
+              swithContorl={() => setIsChat(!isChat)}
+              on={isChat}
+              borderColor={colors.lightBlack}
+              circleBColor={!isChat ? colors.black : colors.lightBlack}
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Disapper Messages"
+              isToggel={true}
+              offColor={colors.white}
+              onColor={colors.white}
+              bgOnColor={colors.white}
+              bgoffColor={colors.black}
+              swithContorl={() => setIsDisapper(!isDisapper)}
+              on={isDisapper}
+              borderColor={colors.lightBlack}
+              circleBColor={!isDisapper ? colors.black : colors.lightBlack}
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Display"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Help"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="FAQ"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Terms & Conditions"
+              disabled={true}
+              RightIcon={
+                <RightArrow
+                  marginRight={wp(5)}
+                  alignSelf="center"
+                  width={wp(3)}
+                  height={hp(3)}
+                />
+              }
+            />
+            <RNTextInput
+              marginLeft={wp(7)}
+              fontFamily={fonts.regular}
+              fontSize={wp(4.5)}
+              height={hp(7)}
+              justifyContent="center"
+              backgroundColor={colors.fieldsColor}
+              borderRadius={wp(3)}
+              marginHorizontal={wp(6)}
+              marginTop={hp(1)}
+              text="Delete Account"
+              disabled={true}
+            />
+            <View style={{ marginBottom: hp(10) }} />
+          </ScrollView>
+        </View>
+      </View>
     </View>
   );
 };
@@ -132,32 +329,41 @@ const styles = {
     color: colors.white,
   },
   subContainerStyle: {
-    backgroundColor: colors.fieldsColor,
+    backgroundColor: colors.bWhite,
     flex: 1,
     borderTopLeftRadius: wp(12),
     borderTopRightRadius: wp(12),
     marginTop: hp(2),
-    paddingTop: hp(0.3),
+    padding: wp(2),
   },
   DPStyle: {
-    width: wp(16),
-    height: wp(16),
-    borderRadius: wp(16),
+    width: wp(32),
+    height: wp(32),
+    borderRadius: wp(32),
     alignSelf: "center",
-  },
-  DPcontainerStyle: {
-    width: wp(16),
-    height: wp(16),
-    borderRadius: wp(16),
-    borderColor: colors.gray,
+    marginTop: hp(2),
     borderWidth: 1,
-    justifyContent: "center",
   },
+
   contactNameStyle: {
     color: colors.black,
     alignSelf: "center",
-    fontSize: wp(4.5),
+    fontSize: wp(5.5),
     fontFamily: fonts.medium,
+    marginTop: hp(1),
+  },
+  phoneNumberStyle: {
+    color: colors.black,
+    alignSelf: "center",
+    fontSize: wp(4),
+    fontFamily: fonts.light,
+    fontWeight: "400",
+  },
+  descriptionStyle: {
+    color: colors.black,
+    alignSelf: "center",
+    fontSize: wp(4),
+    fontFamily: fonts.light,
   },
   sectionHeaderStyle: {
     textAlignVertical: "center",

@@ -86,7 +86,7 @@ const SignUpScreen = (props) => {
     ImagePicker.launchImageLibrary(options, (res) => {
       console.log("PIC Responese:    ", res.assets[0]);
       setProfilePic(res.assets[0]);
-    });
+    }).catch((e) => console.log(e));
   };
 
   // ========================= END ===========================
@@ -195,14 +195,15 @@ const SignUpScreen = (props) => {
                       </Text>
                       <DownArrow
                         alignSelf="center"
-                        width={wp(3.5)}
-                        height={hp(3.5)}
+                        width={wp(3)}
+                        height={hp(3)}
+                        marginTop={hp(0.4)}
                       />
                     </TouchableOpacity>
                     <RNTextInput
                       keyboardType="phone-pad"
                       height={hp(6)}
-                      width={wp(55)}
+                      width={wp(60)}
                       marginLeft={wp(5)}
                       borderRadius={wp(3)}
                       placeholder="Enter Your Number"
@@ -278,6 +279,7 @@ const SignUpScreen = (props) => {
                       }}
                       resizeMode="cover"
                     />
+                    <Text style={styles.uploadTextStyle}>Upload Picture</Text>
                     <TouchableOpacity
                       style={{
                         backgroundColor: colors.black,
@@ -365,7 +367,7 @@ const styles = {
   },
   countryPickerStyle: {
     backgroundColor: colors.fieldsColor,
-    width: wp(25),
+    width: wp(22),
     height: hp(6),
     flexDirection: "row",
     justifyContent: "space-around",
@@ -375,8 +377,8 @@ const styles = {
     alignSelf: "center",
     opacity: 0.34,
     color: colors.black,
-    marginLeft: wp(-2),
-    fontSize: wp(4),
+    marginLeft: wp(-4),
+    fontSize: wp(3.5),
   },
   footerStyle: {
     marginHorizontal: wp(8),
@@ -390,5 +392,13 @@ const styles = {
     marginTop: hp("0.5%"),
     fontSize: wp("3.4%"),
     color: "red",
+  },
+  uploadTextStyle: {
+    position: "absolute",
+    top: hp(14),
+    alignSelf: "center",
+    color: colors.white,
+    fontFamily: fonts.regular,
+    fontSize: wp(4.5),
   },
 };

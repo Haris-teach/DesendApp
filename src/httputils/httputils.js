@@ -4,6 +4,7 @@ import HitApi, {
   doPost,
   doGetAPICall,
   Multipart,
+  formDataAPi,
 } from "./httpservices";
 
 export function userLoginAPICall(params) {
@@ -41,6 +42,10 @@ export function contactsync(params, token) {
   return HitApi("api/v1/user/sync-contacts", "post", params, token);
 }
 
-export function getContact(token) {
-  return HitApi("api/v1/user/contacts", "GET", "", token);
+export function getContact(params, token) {
+  return HitApi("api/v1/user/contacts", "post", params, token);
+}
+
+export function GetMediaUrl(params) {
+  return doPost("api/v1/user/media", params);
 }

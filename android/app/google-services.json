@@ -1,42 +1,49 @@
 {
   "project_info": {
-    "project_number": "103479813970",
-    "project_id": "desend-3a0d8",
-    "storage_bucket": "desend-3a0d8.appspot.com"
+    "project_number": "902895208558",
+    "project_id": "desend-a31f6",
+    "storage_bucket": "desend-a31f6.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:103479813970:android:7bedfe57ae4feb2d737c8b",
+        "mobilesdk_app_id": "1:902895208558:android:1e75892873a07a29de7e7f",
         "android_client_info": {
-          "package_name": "com.desend"
+          "package_name": "com.desend.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "103479813970-282fqlk3ihen5o1kjn9dkfg6o1kai3vf.apps.googleusercontent.com",
+          "client_id": "902895208558-31f7u7q60oh4ch0ausanglnfltd3q49k.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.desend",
+            "package_name": "com.desend.app",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
         {
-          "client_id": "103479813970-buvuil1du3c0qlg8u2cp9rssbc5t8ee5.apps.googleusercontent.com",
+          "client_id": "902895208558-8ukl5coips26qa12ngrqkl69qeuj1okq.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAK3Z-cB-8FLu50d-5iVL_xIbG4i75vwTw"
+          "current_key": "AIzaSyAGUOCQT9-GXI0RaQmPA4mMRx01_M4imu8"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "103479813970-buvuil1du3c0qlg8u2cp9rssbc5t8ee5.apps.googleusercontent.com",
+              "client_id": "902895208558-8ukl5coips26qa12ngrqkl69qeuj1okq.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "902895208558-f5j8kn6uorotdfs2ia3sl5rp1vhknh14.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.desend.app"
+              }
             }
           ]
         }

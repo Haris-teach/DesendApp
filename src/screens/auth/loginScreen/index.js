@@ -98,22 +98,14 @@ const Login = (props) => {
     userLoginAPICall(params).then(async (res) => {
       let fcmToken = await AsyncStorage.getItem("fcmToken");
       if (res.status == 1) {
-        createUserRecord(
-          res.user.id,
-          `${res.user.firstName} ${res.user.lastName}`,
-          res.user.profileImg,
-          fcmToken,
-          (response) => {
-            console.log("createUserRecordResponse", response);
-          }
-        );
+        console.log("ProfileUri:  ", typeof res.user.profileImg);
         dispatch(
           SignIn(
             res.user.id,
             res.user.firstName,
             res.user.lastName,
             res.user.phone,
-            "image",
+            res.user.profileImg,
             res.accessToken
           )
         );
@@ -155,109 +147,98 @@ const Login = (props) => {
           }) => {
             const { phone, pin } = values;
             return (
-              <>
-                <ScrollView style={{ flex: 0.5 }}>
-                  <Text style={styles.headingStyle}>
-                    Enter your information
-                  </Text>
+              <ScrollView>
+                <Text style={styles.headingStyle}>Enter your information</Text>
 
-                  <View style={styles.phoneInputStyle}>
-                    <TouchableOpacity
-                      onPress={() => setIsVisible(true)}
-                      style={styles.countryPickerStyle}
-                    >
-                      <View style={{ marginTop: hp(1) }}>
-                        {Country_Picker()}
-                      </View>
+                <View style={styles.phoneInputStyle}>
+                  <TouchableOpacity
+                    onPress={() => setIsVisible(true)}
+                    style={styles.countryPickerStyle}
+                  >
+                    <View style={{ marginTop: hp(1) }}>{Country_Picker()}</View>
 
-                      <Text style={styles.callingCodeStyle}>
-                        +{withCallingCode}
-                      </Text>
-                      <DownArrow
-                        alignSelf="center"
-                        width={wp(3.5)}
-                        height={hp(3.5)}
-                      />
-                    </TouchableOpacity>
-                    <RNTextInput
-                      keyboardType="phone-pad"
-                      height={hp(6)}
-                      width={wp(55)}
-                      marginLeft={wp(5)}
-                      borderRadius={wp(3)}
-                      placeholder="Enter Your Number"
-                      onChangeText={handleChange("phone")}
-                      onBlur={handleBlur("phone")}
-                      value={phone}
-                      placeholderTextColor={colors.lightBlack}
-                      fontFamily={fonts.regular}
-                      fontSize={wp(4)}
-                      editable={true}
-                      backgroundColor={colors.fieldsColor}
-                      maxLength={10}
+                    <Text style={styles.callingCodeStyle}>
+                      +{withCallingCode}
+                    </Text>
+                    <DownArrow
+                      alignSelf="center"
+                      width={wp(3)}
+                      height={hp(3)}
+                      marginTop={hp(0.4)}
                     />
-                  </View>
-                  {touched.phone && errors.phone && (
-                    <Text style={styles.warningStyle}>{errors.phone}</Text>
-                  )}
-
+                  </TouchableOpacity>
                   <RNTextInput
-                    height={hp(6)}
-                    borderRadius={wp(3)}
-                    placeholder="Enter Your Pin Code"
-                    onChangeText={handleChange("pin")}
-                    onBlur={handleBlur("pin")}
-                    value={pin}
-                    placeholderTextColor={colors.lightBlack}
                     keyboardType="phone-pad"
+                    height={hp(6)}
+                    width={wp(60)}
+                    marginLeft={wp(5)}
+                    borderRadius={wp(3)}
+                    placeholder="Enter Your Number"
+                    onChangeText={handleChange("phone")}
+                    onBlur={handleBlur("phone")}
+                    value={phone}
+                    placeholderTextColor={colors.lightBlack}
                     fontFamily={fonts.regular}
                     fontSize={wp(4)}
                     editable={true}
                     backgroundColor={colors.fieldsColor}
-                    marginHorizontal={wp(8)}
-                    marginTop={hp(2)}
-                    marginLeft={wp(5)}
-                    maxLength={4}
-                    secureTextEntry={true}
+                    maxLength={10}
                   />
-                  {touched.pin && errors.pin && (
-                    <Text style={styles.warningStyle}>{errors.pin}</Text>
-                  )}
+                </View>
+                {touched.phone && errors.phone && (
+                  <Text style={styles.warningStyle}>{errors.phone}</Text>
+                )}
 
-                  <Text style={styles.footerStyle}>
-                    Don't have an account?{" "}
-                    <Text
-                      onPress={() => props.navigation.navigate("SignUPScreen")}
-                      style={{ color: colors.black }}
-                    >
-                      Get Registered
-                    </Text>
-                  </Text>
+                <RNTextInput
+                  height={hp(6)}
+                  borderRadius={wp(3)}
+                  placeholder="Enter Your Pin Code"
+                  onChangeText={handleChange("pin")}
+                  onBlur={handleBlur("pin")}
+                  value={pin}
+                  placeholderTextColor={colors.lightBlack}
+                  keyboardType="phone-pad"
+                  fontFamily={fonts.regular}
+                  fontSize={wp(4)}
+                  editable={true}
+                  backgroundColor={colors.fieldsColor}
+                  marginHorizontal={wp(8)}
+                  marginTop={hp(2)}
+                  marginLeft={wp(5)}
+                  maxLength={4}
+                  secureTextEntry={true}
+                />
+                {touched.pin && errors.pin && (
+                  <Text style={styles.warningStyle}>{errors.pin}</Text>
+                )}
 
-                  <View
-                    style={{
-                      height: hp(50),
-                      marginTop: hp(25),
-                    }}
+                <Text style={styles.footerStyle}>
+                  Don't have an account?{" "}
+                  <Text
+                    onPress={() => props.navigation.navigate("SignUPScreen")}
+                    style={{ color: colors.black }}
                   >
-                    <RNButton
-                      flex={0}
-                      justifyContent="center"
-                      isLoading={isLoading}
-                      btnText="Continue"
-                      textColor={colors.black}
-                      btnColor={colors.loginBtnColor}
-                      height={hp(6.4)}
-                      marginHorizontal={hp(6)}
-                      borderRadius={wp(10)}
-                      marginTop={hp(3)}
-                      fontSize={wp(4)}
-                      fontFamily={fonts.medium}
-                      onPress={handleSubmit}
-                    />
-                  </View>
-                </ScrollView>
-              </>
+                    Get Registered
+                  </Text>
+                </Text>
+
+                <RNButton
+                  flex={0}
+                  justifyContent="center"
+                  isLoading={isLoading}
+                  btnText="Continue"
+                  textColor={colors.black}
+                  btnColor={colors.loginBtnColor}
+                  height={hp(6.4)}
+                  marginHorizontal={hp(6)}
+                  borderRadius={wp(10)}
+                  marginTop={hp(1)}
+                  marginBottom={hp(2)}
+                  fontSize={wp(4)}
+                  fontFamily={fonts.medium}
+                  onPress={handleSubmit}
+                />
+              </ScrollView>
             );
           }}
         </Formik>
@@ -298,7 +279,7 @@ const styles = {
   },
   countryPickerStyle: {
     backgroundColor: colors.otpBoxColor,
-    width: wp(25),
+    width: wp(22),
     height: hp(6),
     flexDirection: "row",
     justifyContent: "space-around",
@@ -308,14 +289,15 @@ const styles = {
     alignSelf: "center",
     opacity: 0.34,
     color: colors.black,
-    marginLeft: wp(-2),
-    fontSize: wp(4),
+    marginLeft: wp(-4),
+    fontSize: wp(3.5),
   },
   footerStyle: {
     marginHorizontal: wp(8),
     color: colors.lightBlack,
     fontFamily: fonts.medium,
     marginTop: hp(2),
+    marginBottom: hp(20),
   },
   warningStyle: {
     marginHorizontal: wp(12),

@@ -22,6 +22,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -35,10 +37,16 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Desend wants to use camera for capture and image and video</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Desend use contacts for chat and call</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>Desend wants to use location for send current location in chat</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Desend wants to use microphone for voice recording</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Desend wants to use images and video for send in chat</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Black.ttf</string>

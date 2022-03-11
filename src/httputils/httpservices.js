@@ -11,15 +11,9 @@ export function doPost(urlAction, formData, bearerToken) {
     fetch(BASE_URL + urlAction, {
       body: formData,
       method: "post",
-      headers:
-        bearerToken == undefined
-          ? new Headers({
-              "Content-Type": "multipart/form-data",
-            })
-          : new Headers({
-              Authorization: "Bearer " + bearerToken,
-              "Content-Type": "multipart/form-data",
-            }),
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     })
       .then((response) => response.json())
       .then((responseJson) => {
@@ -64,6 +58,33 @@ export function checkConnectivity() {
   });
 }
 // Check Internet connectivity end
+
+export function formDataAPi(urlAction, params) {
+  let url = BASE_URL + urlAction;
+
+  var options = {
+    url,
+    method: "post",
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    data: params,
+  };
+  try {
+    return axios(options)
+      .then((response) => {
+        console.log("API respones", response.data);
+        return response.data;
+      })
+
+      .catch((e) => {
+        console.log("Error is=====: ", e.response.data);
+        return e.response.data;
+      });
+  } catch (e) {
+    console.log("Error is: ", e);
+  }
+}
 
 // Axios Method Api function for(get ,post ,patch methods) but not for multiparts
 

@@ -1,4 +1,9 @@
-import { LOGIN_REQUEST, LOGOUT_REQUEST, SIGN_UP } from "../actions/actionTypes";
+import {
+  LOGIN_REQUEST,
+  LOGOUT_REQUEST,
+  SAVE_CONTACTS,
+  SIGN_UP,
+} from "../actions/actionTypes";
 
 const INITIAL_STATE = {
   id: 1,
@@ -6,12 +11,13 @@ const INITIAL_STATE = {
   firstName: "Muhammad",
   lastName: "Haris",
   email: "muhammadharis4999@gmail.com",
-  isPhone: "09007861",
+  isPhone: "090078601",
   password: "123456",
   profilePic: { fileName: "", type: "", uri: "" },
+  uri: "",
   token: null,
-  loading: false,
   isLogin: false,
+  contactsList: [],
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -25,7 +31,7 @@ export default (state = INITIAL_STATE, action) => {
         lastName: action.payload.lastname,
         id: action.payload.id,
         phone: action.payload.phone,
-        uri: action.payload.uri,
+        uri: action.payload.profileimage,
       };
       break;
     case SIGN_UP:
@@ -41,6 +47,11 @@ export default (state = INITIAL_STATE, action) => {
         },
       };
       break;
+    case SAVE_CONTACTS:
+      return {
+        ...state,
+        contactsList: action.payload,
+      };
     case LOGOUT_REQUEST:
       return {
         ...state,

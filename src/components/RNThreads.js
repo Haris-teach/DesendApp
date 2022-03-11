@@ -86,7 +86,7 @@ const RNThreads = (props) => {
 
       <View
         style={{
-          borderWidth: 1,
+          borderWidth: 0.7,
           borderColor: "#CACACA",
           opacity: 0.2,
           marginHorizontal: props.linemarginHorizontal,

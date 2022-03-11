@@ -1,38 +1,40 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  ImageBackground,
-  KeyboardAvoidingView,
   View,
   TouchableOpacity,
-  ActivityIndicator,
+  Platform,
   Keyboard,
-  ScrollView,
   Dimensions,
   Image,
+  SectionList,
+  Clipboard,
   Text,
   TextInput,
+  ActivityIndicator,
+  FlatList,
+  PermissionsAndroid,
+  Linking,
 } from "react-native";
-import {
-  GiftedChat,
-  InputToolbar,
-  Send,
-  Bubble,
-  Actions,
-} from "react-native-gifted-chat";
+import { GiftedChat } from "react-native-gifted-chat";
 import * as ImagePicker from "react-native-image-picker";
 import moment from "moment";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
+import Video from "react-native-video";
 import { SwipeListView } from "react-native-swipe-list-view";
 import Popover from "react-native-popover-view";
-
 import { useSelector, useDispatch } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
 import storage from "@react-native-firebase/storage";
-import { firebase } from "@react-native-firebase/auth";
+import DocumentPicker from "react-native-document-picker";
+var FormData = require("form-data");
+import { Dialog } from "react-native-simple-dialogs";
 
+import { GetMediaUrl } from "../../../httputils/httputils";
+import ContactCardComponent from "../../../components/ContactCardComponent/ContactCardComponent";
+import alphabets from "../../../components/alphabets";
 import { createChatId, sendMessage } from "../../../utils/helper";
 import CallIcon from "../../../assets/images/svgs/callIcon.svg";
 import VideoIcon from "../../../assets/images/svgs/video.svg";
@@ -48,24 +50,22 @@ import EmojiIcon from "../../../assets/images/svgs/emojiIcon.svg";
 import GifIcon from "../../../assets/images/svgs/gifIcon.svg";
 import ContactIcon from "../../../assets/images/svgs/contactIcon.svg";
 import DoubleTick from "../../../assets/images/svgs/doubleTick.svg";
+import SingleTick from "../../../assets/images/svgs/singleTick.svg";
 import More from "../../../assets/images/svgs/more.svg";
-
 import Delete from "../../../assets/images/svgs/delete.svg";
-
 import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../constants/colors";
-import { setIn } from "formik";
 
 const ChatRoom = (props) => {
+  const isProfile = useSelector((state) => state.authReducer.uri);
   const currentUserId = useSelector((state) => state.authReducer.id);
   const userName = useSelector((state) => state.authReducer.firstName);
+  const token = useSelector((state) => state.authReducer.token);
   const otherName = props.route.params.userName;
   const otherNumber = props.route.params.userNumber;
   const userID = props.route.params.userId;
   const otherProfile = props.route.params.userProfile;
   let chatId = createChatId([...[currentUserId], ...userID]);
-
-  console.log("OtherUserId:   ", userID);
 
   const [messages, setMessages] = useState([]);
   const [textMsg, setTextMsg] = useState("");
@@ -88,6 +88,30 @@ const ChatRoom = (props) => {
       type: "image/jpeg",
     },
   ]);
+  const [isRecording, setIsRecording] = useState(false);
+  var [timerState, setTimerState] = useState(0);
+  const [fileUri, setFileURI] = useState(null);
+  const [filePath, setFilePath] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [contactObj, setContactObj] = useState(null);
+
+  const timer = () => {
+    let count = timerState;
+    if (isRecording) {
+      var time = setInterval(() => {
+        count = count + 1;
+        setTimerState(count);
+      }, 1000);
+    } else {
+      clearInterval(time);
+      setTimerState(0);
+    }
+  };
+  let hours = Math.floor(timerState / 3600);
+  let minutes = Math.floor((timerState / 60) % 60);
+  let seconds = Math.floor(timerState % 60);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -118,11 +142,9 @@ const ChatRoom = (props) => {
       .collection("messages")
       .orderBy("createdAt", "desc")
       .onSnapshot({ includeMetadataChanges: true }, (res) => {
-        // console.log('response from messages', res.docs)
         let msgs = [];
         res.docs.forEach((msg) => {
           if (msg.exists) {
-            // console.log("_______MEssgage collection---------",msg)
             const {
               id,
               text,
@@ -133,11 +155,11 @@ const ChatRoom = (props) => {
             let data = {
               id,
               text,
+              docId: msg.id,
               createdAt: moment(createdAt),
               user: { name, _id, avatar },
               image,
             };
-            setIsIndex(id);
             msgs.push(data);
           }
         });
@@ -147,100 +169,63 @@ const ChatRoom = (props) => {
           return dateB - dateA;
         });
         setMessages(Data);
-        //console.log("----Messages 1234------: ", Data);
       });
   }, []);
 
-  // pick images from gallery
-
-  const PicImage = () => {
-    ImagePicker.launchImageLibrary({
-      mediaType: "photo",
-      quality: 1,
-      selectionLimit: 0,
-    })
-      .then((img) => {
-        img.assets.forEach((i) => {
-          uploadImageToStorage(i.uri);
-          return {
-            uri: i.uri,
-            width: i.width,
-            height: i.height,
-            type: i.type,
-          };
-        });
-      })
-      .catch((e) => alert(e));
-  };
-
   // upload image on fire storage
-  const uploadImageToStorage = async (image) => {
-    setIsLoading(true);
-
-    const storageRef = storage().ref("chats/");
-
-    // const path = `${user.uid}/${name}.${ext}`;
-    var m = moment();
-    var ms = m.milliseconds();
-    const path = `${currentUserId + ms}`;
-
-    //const Task =  storageRef.child(path).putFile(i.uri);
-    const uploadTask = storageRef.child(path).putFile(image);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        console.log("snapShot:   ", snapshot);
-        let progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-
-        switch (snapshot.state) {
-          case storage.TaskState.PAUSED:
-            break;
-          case storage.TaskState.CANCELLED:
-            break;
-          case storage.TaskState.ERROR:
-            break;
-          case storage.TaskState.RUNNING:
-            break;
-        }
-      },
-      (_err) => {
-        console.log("Error: ", _err);
-      }
-    );
-    //   () => {
-    //     uploadTask.snapshot.ref.getDownloadURL().then(async (u) => {
-    //       setIsLoading(false);
-    //       url.push({ uri: u });
-    //       setUrl(url);
-    //     });
-    //   }
-    // );
-  };
 
   const onSend = () => {
-    sendMessage(
-      {
-        id: isIndex,
-        text: textMsg,
-        image: url == [] ? null : JSON.stringify(url),
-        createdAt: moment().format(),
-        sent: true,
-
-        received: false,
-        pending: true,
-        otherUserName: otherName,
-        otherUserId: userID,
-        userNumber: otherNumber,
-        user: {
-          _id: currentUserId,
-          name: userName,
-          avatar: "https://placeimg.com/140/140/any",
+    if (url.length == 0) {
+      sendMessage(
+        {
+          id: isIndex,
+          text: textMsg,
+          image: null,
+          createdAt: moment().format(),
+          sent: true,
+          isSeen: false,
+          received: false,
+          pending: true,
+          otherUserName: otherName,
+          otherUserId: userID,
+          userNumber: otherNumber,
+          user: {
+            _id: currentUserId,
+            name: userName,
+            avatar: "https://placeimg.com/140/140/any",
+          },
         },
-      },
 
-      [...[currentUserId], ...userID]
-    );
+        [...[currentUserId], ...userID]
+      );
+    } else {
+      url.map((i) => {
+        sendMessage(
+          {
+            id: isIndex,
+            text: textMsg,
+            image: i,
+            createdAt: moment().format(),
+            sent: true,
+            isSeen: false,
+            received: false,
+            pending: true,
+            otherUserName: otherName,
+            otherUserId: userID,
+            userNumber: otherNumber,
+            user: {
+              _id: currentUserId,
+              name: userName,
+              avatar: "https://placeimg.com/140/140/any",
+            },
+          },
+
+          [...[currentUserId], ...userID]
+        );
+      });
+    }
+    files.splice(0, files.length);
+    url.splice(0, url.length);
   };
 
   const renderInputToolbar = (props) => {
@@ -250,7 +235,7 @@ const ChatRoom = (props) => {
           <TouchableOpacity onPress={() => setIsPlusPress(!isPlusPress)}>
             <CirclePlus alignSelf="center" width={wp(5.5)} height={hp(5.5)} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={CameraPicker}>
             <CameraIcon alignSelf="center" width={wp(5.5)} height={hp(5.5)} />
           </TouchableOpacity>
         </View>
@@ -269,33 +254,61 @@ const ChatRoom = (props) => {
           style={[
             styles.rightIconsStyle,
             {
-              justifyContent: textMsg != "" ? "space-around" : "flex-end",
+              justifyContent:
+                textMsg != "" && textMsg.replace(/\s+/g, "").length != 0
+                  ? "space-around"
+                  : "flex-end",
             },
           ]}
         >
-          {textMsg != "" ? (
+          {(textMsg != "" && textMsg.replace(/\s+/g, "").length != 0) ||
+          files.length != 0 ? (
             <TouchableOpacity
               style={styles.sendBtnStyle}
               onPress={() => {
+                setIsIndex(isIndex + 1);
                 onSend();
                 setTextMsg("");
-                setIsIndex(isIndex + 1);
               }}
             >
               <Fly alignSelf="center" />
             </TouchableOpacity>
           ) : null}
-          <MicroPhone alignSelf="center" width={wp(9)} height={hp(9)} />
+          <TouchableOpacity
+            style={styles.sendBtnStyle}
+            // onPress={() => {
+            //   setIsRecording(!isRecording);
+            //   if (isRecording) {
+            //     timer();
+            //     SoundRecorder.start(
+            //       SoundRecorder.PATH_CACHE + "/test.mp4"
+            //     ).then((e) => {
+            //       console.log("started recording", e);
+            //     });
+            //   } else {
+            //     timer();
+            //     SoundRecorder.stop().then(function (result) {
+            //       console.log(
+            //         "stopped recording, audio file saved at: " + result.path
+            //       );
+            //     });
+            //   }
+            // }}
+          >
+            <MicroPhone alignSelf="center" width={wp(9)} height={hp(9)} />
+          </TouchableOpacity>
         </View>
       </View>
     );
   };
 
   const renderBubble = (props) => {
+    let arr = [];
+    arr.push(props.currentMessage);
     return (
       <SwipeListView
-        data={[props.currentMessage]}
-        keyExtractor={(item, index) => item.id + index}
+        data={arr}
+        keyExtractor={(item) => item.docId}
         renderItem={() => renderItem(props)}
         nestedScrollEnabled={true}
         showsVerticalScrollIndicator={false}
@@ -319,91 +332,195 @@ const ChatRoom = (props) => {
   };
 
   const renderItem = (props) => {
+    var Data = props.currentMessage.image;
+
+    if (Data != null) {
+      var type = Data.type.split("/");
+      var name = Data.name.split(".");
+    } else {
+      type = ["image"];
+      name = ["docx"];
+    }
+
+    return (
+      <>
+        {Data == null ? (
+          <View
+            style={{
+              padding: wp(3),
+              borderTopLeftRadius: wp(6),
+              borderTopRightRadius: wp(6),
+              borderBottomLeftRadius:
+                props.currentMessage.user._id == currentUserId ? wp(6) : wp(0),
+              borderBottomRightRadius:
+                props.currentMessage.user._id != currentUserId ? wp(6) : wp(0),
+              backgroundColor:
+                props.currentMessage.user._id == currentUserId
+                  ? colors.sendBubbleColor
+                  : colors.reciveBubbleColor,
+              width: wp(80),
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                // backgroundColor: "red",
+                marginLeft: wp(3),
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.black,
+                  fontFamily: fonts.medium,
+                  fontSize: wp(4),
+                  alignSelf: "center",
+                }}
+              >
+                {props.currentMessage.user.name}
+              </Text>
+              <Text
+                style={{
+                  color: colors.lightBlack,
+                  alignSelf: "center",
+                  fontSize: wp(3),
+                }}
+              >
+                {moment
+                  .utc(props.currentMessage.createdAt)
+                  .local()
+                  .format("HH:mm")}
+              </Text>
+            </View>
+
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <Text
+                style={{
+                  color:
+                    props.currentMessage.user._id == currentUserId
+                      ? colors.msgSendTextColor
+                      : colors.msgTextColor,
+                  fontSize: wp(3.5),
+                  fontFamily: fonts.light,
+                  marginLeft: wp(2.2),
+                }}
+              >
+                {props.currentMessage.text}
+              </Text>
+            </View>
+
+            {props.currentMessage.user._id == currentUserId ? (
+              <DoubleTick alignSelf="flex-end" />
+            ) : null}
+          </View>
+        ) : type[0] == "image" ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(Data.uri)}
+            style={styles.mediaStyle}
+          >
+            <Image
+              source={{ uri: Data.uri }}
+              style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
+        ) : type[0] == "video" ? (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(Data.uri)}
+            style={styles.mediaStyle}
+          >
+            <Video
+              source={{ uri: Data.uri }}
+              style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
+              resizeMode="cover"
+              //controls={true}
+            />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => Linking.openURL(Data.uri)}
+            style={{
+              width: wp(70),
+              height: hp(8),
+              backgroundColor:
+                props.currentMessage.user._id == currentUserId
+                  ? colors.sendBubbleColor
+                  : colors.reciveBubbleColor,
+              borderRadius: wp(5),
+            }}
+          >
+            <View
+              style={{
+                borderRadius: wp(2),
+                flexDirection: "row",
+              }}
+            >
+              <Image
+                source={{
+                  uri:
+                    name[1] == "docx"
+                      ? "https://www.macworld.com/wp-content/uploads/2021/12/word-app-icon.png"
+                      : name[1] == "pdf"
+                      ? "https://www.iconpacks.net/icons/2/free-pdf-icon-1512-thumb.png"
+                      : "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Circle-icons-folder.svg/1024px-Circle-icons-folder.svg.png",
+                }}
+                style={{
+                  width: wp(15),
+                  height: wp(15),
+                  borderRadius: wp(2),
+                  alignSelf: "center",
+                }}
+                resizeMode="cover"
+              />
+              <Text
+                style={{
+                  alignSelf: "center",
+                  color: colors.black,
+                  fontFamily: fonts.regular,
+                  fontSize: wp(3),
+                  marginRight: wp(2),
+                  width: wp(50),
+                }}
+              >
+                {Data.name}
+              </Text>
+            </View>
+
+            {/* {props.currentMessage.user._id == currentUserId ? (
+              <DoubleTick alignSelf="flex-end" />
+            ) : null} */}
+          </TouchableOpacity>
+        )}
+      </>
+    );
+  };
+  const renderHiddenItem = (data, rowMap, props) => {
+    var Data = props.currentMessage.image;
+    if (Data != null) {
+      var type = Data.type.split("/");
+      var name = Data.name.split(".");
+    } else {
+      type = ["image"];
+      name = ["docx"];
+    }
     return (
       <View
         style={{
-          padding: wp(3),
-          borderTopLeftRadius: wp(6),
-          borderTopRightRadius: wp(6),
-          borderBottomLeftRadius:
-            props.currentMessage.user._id == currentUserId ? wp(6) : wp(0),
-          borderBottomRightRadius:
-            props.currentMessage.user._id != currentUserId ? wp(6) : wp(0),
-          backgroundColor:
-            props.currentMessage.user._id == currentUserId
-              ? colors.sendBubbleColor
-              : colors.reciveBubbleColor,
-          width: wp(80),
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            // backgroundColor: "red",
-            marginLeft: wp(3),
-          }}
-        >
-          <Text
-            style={{
-              color: colors.black,
-              fontFamily: fonts.medium,
-              fontSize: wp(4),
-              alignSelf: "center",
-            }}
-          >
-            {props.currentMessage.user.name}
-          </Text>
-          <Text
-            style={{
-              color: colors.lightBlack,
-              alignSelf: "center",
-              fontSize: wp(3),
-            }}
-          >
-            {moment.utc(props.currentMessage.createdAt).local().format("HH:mm")}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text
-            style={{
-              color:
-                props.currentMessage.user._id == currentUserId
-                  ? colors.msgSendTextColor
-                  : colors.msgTextColor,
-              fontSize: wp(3.5),
-              fontFamily: fonts.light,
-              marginLeft: wp(2.2),
-            }}
-          >
-            {props.currentMessage.text}
-          </Text>
-
-          <View style={{ justifyContent: "center" }}>
-            {props.currentMessage.user._id == currentUserId ? (
-              <DoubleTick alignSelf="center" />
-            ) : null}
-          </View>
-        </View>
-      </View>
-    );
-  };
-  const renderHiddenItem = (data, rowMap, props) => (
-    <View style={styles.rowBack}>
-      <View
-        style={{
+          flex: 1,
           alignSelf:
             props.currentMessage.user._id != currentUserId
               ? "flex-end"
               : "flex-start",
           marginRight: wp(5),
+          justifyContent: "center",
         }}
       >
         <Popover
           from={
             <TouchableOpacity>
-              <More marginLeft={wp(5)} />
+              <More marginLeft={wp(5)} alignSelf="center" />
             </TouchableOpacity>
           }
         >
@@ -421,15 +538,21 @@ const ChatRoom = (props) => {
               <Text style={styles.popUpTextStyle}>Copy</Text>
               <Delete alignSelf="center" width={wp(5)} height={hp(5)} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.popUpRowStyle}>
+            <TouchableOpacity
+              style={styles.popUpRowStyle}
+              onPress={() => {
+                closeRow(rowMap, 0);
+                DeleteSingleMsg(props.currentMessage.docId);
+              }}
+            >
               <Text style={styles.popUpTextStyle}>Delete</Text>
               <Delete alignSelf="center" width={wp(5)} height={hp(5)} />
             </TouchableOpacity>
           </View>
         </Popover>
       </View>
-    </View>
-  );
+    );
+  };
   const closeRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
       rowMap[rowKey].closeRow();
@@ -437,11 +560,309 @@ const ChatRoom = (props) => {
   };
   const renderSectionHeader = ({ section }) => <Text>{section.title}</Text>;
 
+  const DeleteSingleMsg = (msgId) => {
+    // define document location (Collection Name > Document Name > Collection Name >)
+    var docRef = firestore()
+      .collection("chats")
+      .doc(chatId)
+      .collection("messages");
+
+    // delete the document
+    docRef.doc(msgId).delete();
+  };
+
+  // Get document or any file function
+
+  const Documentpicker = async (mediaType) => {
+    setUrl([]);
+    setFiles([]);
+    try {
+      var data = new FormData();
+      setIsLoading(true);
+      setIsPlusPress(false);
+      const res = await DocumentPicker.pick({
+        type: mediaType,
+        allowMultiSelection: true,
+        presentationStyle: "fullScreen",
+      });
+
+      res.forEach((i, index) => {
+        data.append("mediaFile", {
+          uri: i.uri,
+          name: i.name,
+          type: i.type,
+        });
+      });
+
+      GetMediaUrl(data, token).then((resp) => {
+        setIsLoading(false);
+        if (resp.status == 1) {
+          setFiles(resp.files);
+          resp.files.forEach((i) => {
+            url.push({ uri: i.uri, name: i.name, type: i.type });
+            setUrl(url);
+          });
+        }
+      });
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        // User cancelled the picker, exit any dialogs or menus and mo
+        setIsLoading(false);
+      } else {
+        throw err;
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const flatListRender = ({ item, index }) => {
+    if (item != null) {
+      var type = item.type.split("/");
+      var name = item.name.split(".");
+    } else {
+      type = ["image"];
+      name = ["docx"];
+    }
+    return (
+      <View style={{ flex: 1 }}>
+        <View
+          style={{ marginTop: hp(3) }}
+          onPress={() => setIsPaused(!isPaused)}
+        >
+          {type[0] == "image" ? (
+            <Image
+              source={{
+                uri: item.uri,
+              }}
+              pictureInPicture={true}
+              resizeMode="contain"
+              style={styles.renderMediaStyle}
+            />
+          ) : type[0] == "video" ? (
+            <Video
+              source={{
+                uri: item.uri,
+              }}
+              controls={true}
+              pictureInPicture={true}
+              resizeMode="contain"
+              style={styles.renderMediaStyle}
+            />
+          ) : (
+            <Image
+              source={{
+                uri:
+                  name[1] == "docx"
+                    ? "https://www.macworld.com/wp-content/uploads/2021/12/word-app-icon.png"
+                    : name[1] == "pdf"
+                    ? "https://www.iconpacks.net/icons/2/free-pdf-icon-1512-thumb.png"
+                    : "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Circle-icons-folder.svg/1024px-Circle-icons-folder.svg.png",
+              }}
+              pictureInPicture={true}
+              resizeMode="contain"
+              style={styles.renderMediaStyle}
+            />
+          )}
+          <Text style={{ color: colors.black, alignSelf: "center" }}>
+            {item.name}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => DeleteFile(index)}
+          style={styles.deleteCrossStyle}
+        >
+          <Image
+            source={{
+              uri: "https://listimg.pinclipart.com/picdir/s/42-423083_multiplication-sign-svg-png-icon-free-download-tic.png",
+            }}
+            style={{ width: wp(5), height: hp(5), alignSelf: "center" }}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  const DeleteFile = (i) => {
+    setIsLoading(true);
+    setFiles(
+      files.filter((item, index) => {
+        setIsLoading(false);
+        return index != i;
+      })
+    );
+    setUrl(
+      url.filter((item, index) => {
+        setIsLoading(false);
+        return index != i;
+      })
+    );
+    // console.log(files);
+  };
+
+  // ======================= Pick Image from Gallery ====================
+
+  const CameraPicker = async () => {
+    if (Platform.OS == "android") {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "App Camera Permission",
+            message: "App needs access to your camera ",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          ImagePicker.launchCamera((res) => {
+            var data = new FormData();
+            setIsLoading(true);
+            console.log("PIC Responese:    ", res);
+            res.forEach((i, index) => {
+              data.append("mediaFile", {
+                uri: i.uri,
+                name: i.name,
+                type: i.type,
+              });
+            });
+            GetMediaUrl(data, token).then((resp) => {
+              setIsLoading(false);
+              if (resp.status == 1) {
+                setFiles(resp.files);
+                resp.files.forEach((i) => {
+                  url.push({ uri: i.uri, name: i.name, type: i.type });
+                  setUrl(url);
+                });
+              }
+            });
+          }).catch((e) => console.log(e));
+        } else {
+          console.log("Camera permission denied");
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    } else {
+      ImagePicker.launchCamera((res) => {
+        console.log("PIC Responese:    ", res);
+      }).catch((e) => console.log(e));
+    }
+  };
+
+  //ContactList render Modal
+
+  const contactsList = useSelector((state) => state.authReducer.contactsList);
+
+  const sortedArray = [];
+
+  const [searchState, setSearchState] = useState("");
+
+  let filteredData = [];
+  filteredData = contactsList.filter((data) => {
+    return data?.givenName.toLowerCase().includes(searchState.toLowerCase());
+  });
+
+  for (let i = 0; i < alphabets.length; i++) {
+    if (
+      filteredData.filter(
+        (data) =>
+          data?.givenName?.charAt(0).toLocaleLowerCase() ==
+          alphabets[i]?.toLocaleLowerCase()
+      ).length > 0
+    ) {
+      sortedArray.push({
+        key: alphabets[i],
+        title: alphabets[i],
+        data: filteredData.filter(
+          (data) =>
+            data.givenName.charAt(0).toLocaleLowerCase() ==
+            alphabets[i].toLocaleLowerCase()
+        ),
+      });
+    }
+  }
+
+  const renderItems = ({ item, index }) => {
+    return (
+      <ContactCardComponent
+        image={
+          <View style={styles.DPcontainerStyle}>
+            <Image
+              source={{
+                uri:
+                  item.thumbnailPath == ""
+                    ? "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"
+                    : item.thumbnailPath,
+              }}
+              style={styles.DPStyle}
+            />
+          </View>
+        }
+        name={item.givenName}
+        data={item}
+        hasThumbnail={item.image}
+        mainPress={() => {
+          setContactObj({
+            name: item.givenName,
+            number: item.phoneNumbers,
+            profile: item.thumbnailPath,
+          });
+          setTextMsg(
+            `Name:  ${item.givenName}                                Number:  ${item.phoneNumbers[0]}`
+          );
+          setIsVisible(false);
+          setIsPlusPress(false);
+        }}
+        isIcon={false}
+      />
+    );
+  };
+
+  var defaultSectionHeader = function (_a) {
+    var section = _a.section;
+    return <Text style={styles.sectionHeaderStyle}>{section.title}</Text>;
+  };
+
+  const RenderModal = () => {
+    return (
+      <Dialog
+        visible={isVisible}
+        title="Contacts"
+        titleStyle={{ alignSelf: "center" }}
+        onTouchOutside={() => setIsVisible(false)}
+        dialogStyle={{
+          borderRadius: wp(4),
+          width: wp(100),
+          height: hp(100),
+          marginLeft: wp(-5),
+        }}
+      >
+        <SectionList
+          keyExtractor={(item, index) => `${item.key}+${index}`}
+          renderSectionHeader={defaultSectionHeader}
+          sections={sortedArray}
+          renderItem={renderItems}
+          showsVerticalScrollIndicator={false}
+        />
+      </Dialog>
+    );
+  };
+
   return (
     <View style={styles.mainContainer}>
+      {RenderModal()}
       <View style={styles.mainHeaderContainer}>
         <TouchableOpacity
-          onPress={() => props.navigation.goBack()}
+          onPress={() => {
+            if (url.length == 0) {
+              props.navigation.goBack();
+            } else {
+              setUrl([]);
+              setFiles([]);
+            }
+          }}
           style={{ justifyContent: "center" }}
         >
           <BackArrow alignSelf="center" />
@@ -462,7 +883,9 @@ const ChatRoom = (props) => {
             style={styles.headerImageStyle}
           />
           <View style={styles.nameViewStyle}>
-            <Text style={styles.nameTextStyle}>{otherName}</Text>
+            <Text style={styles.nameTextStyle} numberOfLines={1}>
+              {otherName}
+            </Text>
             <Text style={styles.numberTextStyle}>{otherNumber}</Text>
           </View>
         </View>
@@ -473,45 +896,85 @@ const ChatRoom = (props) => {
       </View>
       <View style={styles.whiteContainerStyle}>
         <View style={{ flex: 0.95 }}>
-          <GiftedChat
-            messages={messages}
-            user={{
-              _id: currentUserId,
-            }}
-            keyExtractor={(item) => item.id}
-            placeholder="Write Message"
-            renderInputToolbar={renderInputToolbar}
-            messagesContainerStyle={{
-              marginHorizontal: wp(3),
-              marginTop: hp(0.6),
-              borderRadius: wp(10),
-            }}
-            renderBubble={renderBubble}
-            isTyping={true}
-            alwaysShowSend={false}
-            isKeyboardInternallyHandled={false}
-          />
+          {isLoading ? (
+            <View style={{ flex: 1, justifyContent: "center" }}>
+              <ActivityIndicator color={colors.black} alignSelf="center" />
+            </View>
+          ) : files.length != 0 ? (
+            <>
+              <FlatList
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                data={files}
+                keyExtractor={(item) => item.id}
+                renderItem={flatListRender}
+                nestedScrollEnabled={true}
+              />
+              <View>{renderInputToolbar()}</View>
+            </>
+          ) : (
+            <GiftedChat
+              messages={messages}
+              user={{
+                _id: currentUserId,
+                avatar: "https://placeimg.com/140/140/any",
+              }}
+              keyExtractor
+              renderInputToolbar={renderInputToolbar}
+              messagesContainerStyle={{
+                marginHorizontal: wp(3),
+                marginTop: hp(0.6),
+                borderRadius: wp(10),
+              }}
+              renderBubble={renderBubble}
+              isTyping={true}
+              alwaysShowSend={false}
+              isLoadingEarlier={true}
+            />
+          )}
 
           {isPlusPress ? (
             <View style={styles.footerViewStyle}>
-              <TouchableOpacity onPress={() => PicImage()}>
+              <TouchableOpacity
+                onPress={() =>
+                  Documentpicker([
+                    DocumentPicker.types.images,
+                    DocumentPicker.types.video,
+                  ])
+                }
+              >
                 <ImageIcon />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsVisible(true)}>
                 <ContactIcon />
               </TouchableOpacity>
               <TouchableOpacity>
                 <EmojiIcon />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Documentpicker([DocumentPicker.types.video])}
+              >
                 <GifIcon />
               </TouchableOpacity>
               <TouchableOpacity>
                 <LocationIcon />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Documentpicker([DocumentPicker.types.allFiles])}
+              >
                 <FileIcon />
               </TouchableOpacity>
+            </View>
+          ) : null}
+          {isRecording ? (
+            <View style={styles.footerViewStyle}>
+              <Text style={styles.txtRecordCounter}>
+                {" "}
+                {/* {minutes > 59 ? (hours < 10 ? `0${hours}` : hours) : null}{" "} */}
+                {hours === 1 ? `:` : null}{" "}
+                {minutes < 10 ? `0${minutes}` : minutes} :{" "}
+                {seconds < 10 ? `0${seconds}` : seconds}
+              </Text>
             </View>
           ) : null}
         </View>
@@ -609,7 +1072,7 @@ const styles = {
   rowBack: {
     flex: 1,
     justifyContent: "center",
-    // backgroundColor: "rgba(5, 8, 17, 0.06)",
+    backgroundColor: "rgba(5, 8, 17, 0.06)",
   },
 
   hiddenTextStyle: {
@@ -627,6 +1090,65 @@ const styles = {
   },
   popUpTextStyle: {
     color: "black",
+    alignSelf: "center",
+  },
+  txtRecordCounter: {
+    color: colors.black,
+    fontSize: wp(5),
+    fontFamily: fonts.medium,
+    textAlignVertical: "center",
+    alignSelf: "center",
+    letterSpacing: wp(1),
+  },
+  backgroundVideo: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+  },
+  mediaStyle: {
+    width: wp(70),
+    height: hp(30),
+    backgroundColor: colors.sendBubbleColor,
+    borderRadius: wp(5),
+  },
+  renderMediaStyle: {
+    width: wp(99),
+    height: hp(50),
+    alignSelf: "center",
+  },
+  deleteCrossStyle: {
+    position: "absolute",
+    bottom: hp(7),
+    alignSelf: "center",
+    width: wp(10),
+    height: wp(10),
+    borderRadius: wp(10),
+    borderWidth: 1,
+    borderColor: colors.black,
+    justifyContent: "center",
+  },
+  subContainerStyle: {
+    backgroundColor: colors.bWhite,
+    flex: 1,
+    borderTopLeftRadius: wp(12),
+    borderTopRightRadius: wp(12),
+    marginTop: hp(2),
+    paddingTop: hp(0.3),
+  },
+  DPcontainerStyle: {
+    width: wp(16),
+    height: wp(16),
+    borderRadius: wp(16),
+    borderColor: colors.gray,
+    borderWidth: 0.2,
+    justifyContent: "center",
+  },
+  DPStyle: {
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(15),
     alignSelf: "center",
   },
 };

@@ -113,16 +113,13 @@ const OTPScreen = (props) => {
           <View style={styles.otpResendViewStyle}>
             {!timer ? (
               <View style={styles.otpResendRowView}>
-                <Text style={styles.otpCodeTextStyle}>
-                  Did not receive the code yet?
-                </Text>
                 <TouchableOpacity
                   onPress={() => {
                     setTimer(!timer);
                     getOTPAgain();
                   }}
                 >
-                  <Text style={styles.otpResendTextStyle}>Resend</Text>
+                  <Text style={styles.otpResendTextStyle}>Resend Code</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -239,8 +236,8 @@ const styles = {
     marginHorizontal: wp(6),
   },
   otpResendRowView: {
-    flexDirection: "row",
     justifyContent: "center",
+    marginTop: hp(-3),
   },
   otpDigitStyle: {
     backgroundColor: "transparent",
@@ -249,10 +246,11 @@ const styles = {
     color: "#A3A3A3",
   },
   otpResendTextStyle: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     color: "black",
-    fontWeight: "bold",
-    marginLeft: wp(0.9),
+    marginRight: wp(5),
+    alignSelf: "flex-end",
+    fontSize: wp(3.5),
   },
   otpCodeTextStyle: {
     textAlignVertical: "bottom",

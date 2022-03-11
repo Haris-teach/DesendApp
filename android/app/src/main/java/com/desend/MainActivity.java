@@ -1,4 +1,4 @@
-package com.desend;
+package com.desend.app;
 
 import com.facebook.react.ReactActivity;
 

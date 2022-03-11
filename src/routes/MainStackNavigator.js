@@ -34,8 +34,42 @@ const Stack = () => {
       .getToken()
       .then((resp) => {
         AsyncStorage.setItem("fcmToken", resp);
+        console.log("====================================");
+        console.log(resp);
+        console.log("====================================");
       });
   };
+  const requestUserPermission = async () => {
+    await messaging().requestPermission();
+  };
+
+  useEffect(() => {
+    requestUserPermission();
+  }, []);
+
+  messaging()
+    .getInitialNotification()
+    .then((remoteMessage) => {
+      if (remoteMessage) {
+        console.log("initialNotifition MESSAGE:   ", remoteMessage);
+        //handleNotification(remoteMessage);
+      }
+    })
+    .catch((reason) => console.log("App::getInitialNotification", reason));
+
+  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+    console.log("Background notifications:    ", remoteMessage);
+  });
+
+  useEffect(() => {
+    const unsubscribe = messaging().onMessage((remoteMessage) => {
+      console.log("unSubcribe  MESSAGE:   ", remoteMessage);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const AfterLoginAppContainer = () => {
     return (

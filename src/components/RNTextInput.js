@@ -1,9 +1,16 @@
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React from "react";
+import SwitchToggle from "react-native-switch-toggle";
+import {
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
+} from "react-native-responsive-screen";
 
 const RNTextInput = (props) => {
   return (
-    <View
+    <TouchableOpacity
+      onPress={props.mainPress}
+      disabled={props.disabled ? false : true}
       style={{
         flexDirection: props.flexDirection,
         height: props.height,
@@ -39,20 +46,53 @@ const RNTextInput = (props) => {
           }}
         />
       ) : (
-        <Text
+        <View
           style={{
-            color: "black",
-            height: props.height,
-            marginLeft: props.marginLeft,
-            fontFamily: props.fontFamily,
-            fontSize: props.fontSize,
-            alignSelf: "center",
+            flexDirection: "row",
+            justifyContent: "space-between",
           }}
         >
-          {props.text}
-        </Text>
+          <Text
+            style={{
+              color: "black",
+              marginLeft: props.marginLeft,
+              fontFamily: props.fontFamily,
+              fontSize: props.fontSize,
+              alignSelf: "center",
+            }}
+          >
+            {props.text}
+          </Text>
+          {props.isToggel ? (
+            <SwitchToggle
+              switchOn={props.on}
+              onPress={props.swithContorl}
+              circleColorOff={props.offColor}
+              circleColorOn={props.onColor}
+              backgroundColorOn={props.bgOnColor}
+              backgroundColorOff={props.bgoffColor}
+              containerStyle={{
+                width: wp(11),
+                height: hp(3),
+                borderRadius: wp(5),
+                marginRight: wp(5),
+                borderColor: props.borderColor,
+                borderWidth: 1,
+              }}
+              circleStyle={{
+                width: wp(7),
+                height: wp(7),
+                borderRadius: wp(7),
+                borderColor: props.circleBColor,
+                borderWidth: 1,
+              }}
+            />
+          ) : (
+            props.RightIcon
+          )}
+        </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 

@@ -110,6 +110,7 @@ const ChatMainScreen = (props) => {
   const [chatRooms, setChatRooms] = useState([]);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMsgs, setIsMsgs] = useState(0);
 
   useEffect(() => {
     GetThreads();
@@ -129,13 +130,14 @@ const ChatMainScreen = (props) => {
                 .collection("chats")
                 .doc(msg.data().chatId)
                 .collection("messages")
-                .orderBy("createdAt", "asc")
+                .orderBy("createdAt", "desc")
                 .onSnapshot({ includeMetadataChanges: true }, (resp) => {
                   if (resp.docs.length != 0) {
                     let obj = {
                       chatId: msg.data().chatId,
                       data: resp.docs[0]._data,
                       createdAt: resp.docs[0]._data.createdAt,
+                      allData: resp.docs,
                     };
                     msgs.push(obj);
                     setIsLoading(false);
@@ -172,7 +174,7 @@ const ChatMainScreen = (props) => {
                 ? [item.user._id]
                 : item.otherUserId.length > 1
                 ? item.otherUserId
-                : [item.otherUserId],
+                : item.otherUserId,
             userProfile: item.user.avatar,
             userNumber: item.userNumber,
           })
@@ -323,9 +325,9 @@ const ChatMainScreen = (props) => {
               renderItem={({ item }) => {
                 return (
                   <RNAvatar
-                    width={wp(17)}
-                    height={wp(17)}
-                    borderRadius={wp(17)}
+                    width={wp(16)}
+                    height={wp(16)}
+                    borderRadius={wp(16)}
                     viewWidth={wp(19)}
                     viewHeight={wp(19)}
                     viewBorderRadius={wp(19)}
@@ -351,7 +353,12 @@ const ChatMainScreen = (props) => {
             />
           </View>
           {isLoading ? (
-            <ActivityIndicator color={colors.black} />
+            <ActivityIndicator
+              color={colors.black}
+              style={styles.activityIndicatorStyle}
+            />
+          ) : chatRooms.length == 0 ? (
+            <Text style={styles.noThreadStyle}>Threads not found</Text>
           ) : (
             <View style={{ flex: 0.85 }}>
               <SwipeListView
@@ -504,5 +511,19 @@ const styles = {
     alignItems: "center",
     alignSelf: "center",
     backgroundColor: colors.floatBtnColor,
+  },
+  noThreadStyle: {
+    alignSelf: "center",
+    marginTop: hp(20),
+    fontFamily: fonts.regular,
+    color: colors.black,
+  },
+  activityIndicatorStyle: {
+    backgroundColor: "white",
+    width: wp(8),
+    height: wp(8),
+    borderRadius: wp(8),
+    alignSelf: "center",
+    marginTop: hp(3),
   },
 };

@@ -5,8 +5,6 @@ import firestore from "@react-native-firebase/firestore";
 export const sendMessage = async (message, users) => {
   const chatId = await createChatId(users);
 
-  //   console.log("--------------Messages------------",message);
-
   firestore()
     .collection("chats")
     .where("chatId", "==", chatId)

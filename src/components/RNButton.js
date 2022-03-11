@@ -12,6 +12,7 @@ const RNButton = (props) => {
         backgroundColor: props.btnColor,
         justifyContent: props.justifyContent,
         marginTop: props.marginTop,
+        marginBottom: props.marginBottom,
       }}
       onPress={props.onPress}
       disabled={props.isLoading}
