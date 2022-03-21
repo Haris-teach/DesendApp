@@ -66,6 +66,7 @@ const PinScreen1 = (props) => {
   // ====================== User Register ========================
 
   const SignUP = () => {
+    setIsLoading(true);
     var data = new FormData();
     data.append("profileImg", profilePic);
     data.append("phone", phone);
@@ -75,10 +76,15 @@ const PinScreen1 = (props) => {
 
     userRegister(data).then((res) => {
       if (res.status == 1) {
+        Toast.showWithGravity(
+          "User Register successfully",
+          Toast.SHORT,
+          Toast.BOTTOM
+        );
         props.navigation.navigate("LoginScreen");
         setIsLoading(false);
       } else {
-        Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+        Toast.show(res.message, Toast.SHORT, Toast.BOTTOM);
         setIsLoading(false);
       }
     });
@@ -109,7 +115,7 @@ const PinScreen1 = (props) => {
               keyboardType="number-pad"
               style={styles.otpInsideStyle}
               pinCount={4}
-              autoFocusOnLoad
+              autoFocusOnLoad={false}
               codeInputFieldStyle={styles.otpCodeFieldStyle}
               onCodeFilled={(code) => {
                 // setClearOTP(false);

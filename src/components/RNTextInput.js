@@ -20,6 +20,7 @@ const RNTextInput = (props) => {
         borderRadius: props.borderRadius,
         marginHorizontal: props.marginHorizontal,
         marginTop: props.marginTop,
+        marginBottom: props.marginBottom,
       }}
     >
       {!props.text ? (

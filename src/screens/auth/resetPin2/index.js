@@ -13,6 +13,7 @@ import {
 } from "react-native-responsive-screen";
 import Toast from "react-native-simple-toast";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
+import { useSelector } from "react-redux";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -20,35 +21,19 @@ import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
+import { ResetPin } from "../../../httputils/httputils";
 
 // ====================== END =================================
 
 // =================== SVGS IMPORT ===========================
 
 import BackArrow from "../../../assets/images/svgs/backArrow.svg";
-import Secure from "../../../assets/images/svgs/secure.svg";
 
 // ====================== END =================================
 
-const PinScreen1 = (props) => {
+const ResetPin2Screen = (props) => {
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // ====================== Create PIN function =====================
-
-  const OtpVerify = () => {
-    setIsLoading(true);
-
-    if (otpCode == "") {
-      Toast.show("Enter pin code", Toast.SHORT, ["UIAlertController"]);
-      setIsLoading(false);
-    } else {
-      props.navigation.navigate("PinScreen2", { pin: otpCode });
-      setIsLoading(false);
-    }
-  };
-
-  // ========================  END  ===============================
 
   return (
     <View style={styles.mainContainer}>
@@ -56,23 +41,18 @@ const PinScreen1 = (props) => {
         leftIcon={<BackArrow alignSelf="center" />}
         leftOnPress={() => props.navigation.goBack()}
       />
-      <Text style={styles.loginTextStyle}>Create Your Pin</Text>
+      <Text style={styles.loginTextStyle}>Your Previous PIN</Text>
 
       {/* ====================== White BackGround ================= */}
 
       <View style={styles.subContainerStyle}>
         <ScrollView style={{ flex: 0.5 }} showsVerticalScrollIndicator={false}>
-          <Text style={styles.headingStyle}>
-            Enter your 4 digit PIN Code to keep your info encrypted
-          </Text>
-
-          <Secure alignSelf="center" />
+          <Text style={styles.headingStyle}>Enter your previous PIN</Text>
 
           <View style={styles.otpCodeFullView}>
             <OTPInputView
               selectionColor={colors.black}
               secureTextEntry={true}
-              // style={styles.otpInsideStyle}
               pinCount={4}
               codeInputFieldStyle={styles.otpCodeFieldStyle}
               onCodeFilled={(code) => {
@@ -86,7 +66,7 @@ const PinScreen1 = (props) => {
           <View
             style={{
               height: Platform.OS === "ios" ? hp(50) : hp(10),
-              marginTop: hp(25),
+              marginTop: hp(40),
             }}
           >
             <RNButton
@@ -102,7 +82,9 @@ const PinScreen1 = (props) => {
               marginTop={hp(3)}
               fontSize={wp(4)}
               fontFamily={fonts.medium}
-              onPress={() => OtpVerify()}
+              onPress={() =>
+                props.navigation.navigate("ResetPin", { oldOtpCode: otpCode })
+              }
             />
           </View>
         </ScrollView>
@@ -111,7 +93,7 @@ const PinScreen1 = (props) => {
   );
 };
 
-export default PinScreen1;
+export default ResetPin2Screen;
 
 const styles = {
   mainContainer: { backgroundColor: "black", flex: 1 },
@@ -174,7 +156,7 @@ const styles = {
   otpCodeFullView: {
     height: hp(9),
     //backgroundColor: 'red',
-    marginTop: hp(3),
+    marginTop: hp(-2),
     marginHorizontal: wp(10),
   },
   otpResendViewStyle: {

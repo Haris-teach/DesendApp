@@ -16,6 +16,7 @@ import { useDispatch } from "react-redux";
 import * as yup from "yup";
 import { Formik } from "formik";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-simple-toast";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -23,7 +24,7 @@ import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
-import { SignIn } from "../../../../redux/actions/authActions";
+import { SignIn, SignOut } from "../../../../redux/actions/authActions";
 import { userLoginAPICall } from "../../../httputils/httputils";
 import { createUserRecord } from "../../../utils/FirebaseHelper";
 
@@ -89,16 +90,16 @@ const Login = (props) => {
 
   // ========================= Login Function ===================
 
-  const LoginUser = (v) => {
+  const LoginUser = async (v) => {
     setIsLoading(true);
+    let fcmToken = await AsyncStorage.getItem("fcmToken");
     let params = {
       phone: `+${withCallingCode + v.phone}`,
       password: v.pin,
+      fcmToken: fcmToken,
     };
-    userLoginAPICall(params).then(async (res) => {
-      let fcmToken = await AsyncStorage.getItem("fcmToken");
+    userLoginAPICall(params).then((res) => {
       if (res.status == 1) {
-        console.log("ProfileUri:  ", typeof res.user.profileImg);
         dispatch(
           SignIn(
             res.user.id,
@@ -106,14 +107,22 @@ const Login = (props) => {
             res.user.lastName,
             res.user.phone,
             res.user.profileImg,
-            res.accessToken
+            res.accessToken,
+            res.user.userSetting
           )
+        );
+        Toast.showWithGravity(
+          "User Login successfully",
+          Toast.SHORT,
+          Toast.BOTTOM
         );
         setIsLoading(false);
       } else {
         setIsLoading(false);
+        Toast.showWithGravity(res.message, Toast.SHORT, Toast.BOTTOM);
       }
     });
+    //dispatch(SignIn("234", "Muhammad", "Haris", "+923174011082", "", ""));
   };
 
   // ========================= END ============================

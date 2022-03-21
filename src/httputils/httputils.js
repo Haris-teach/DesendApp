@@ -49,3 +49,27 @@ export function getContact(params, token) {
 export function GetMediaUrl(params) {
   return doPost("api/v1/user/media", params);
 }
+
+export function ResetPin(params) {
+  return HitApi("api/v1/user/reset-password", "post", params, "");
+}
+
+export function UpdateSetting(params, token) {
+  return HitApi("api/v1/user/setting-update", "PUT", params, token);
+}
+
+export function DeleteUser(token) {
+  return HitApi("api/v1/user/delete-user", "Delete", "", token);
+}
+
+export function VerifyOTP(params) {
+  return HitApi("api/v1/auth/verify-otp", "post", params, "");
+}
+
+export function LogOut(token) {
+  return HitApi("api/v1/auth/logout", "post", "", token);
+}
+
+export function UserBlock(params, token) {
+  return HitApi("api/v1/user/block-contact", "post", params, token);
+}

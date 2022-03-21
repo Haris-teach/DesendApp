@@ -12,7 +12,7 @@ import {
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import CountryPicker from "react-native-country-picker-modal";
-import * as ImagePicker from "react-native-image-picker";
+import DocumentPicker from "react-native-document-picker";
 import Toast from "react-native-simple-toast";
 import { useSelector, useDispatch } from "react-redux";
 import * as yup from "yup";
@@ -78,15 +78,25 @@ const SignUpScreen = (props) => {
 
   // ======================= Pick Image from Gallery ====================
 
-  const PicImage = () => {
-    const options = {
-      mediaType: "photo",
-      quality: 1,
-    };
-    ImagePicker.launchImageLibrary(options, (res) => {
-      console.log("PIC Responese:    ", res.assets[0]);
-      setProfilePic(res.assets[0]);
-    }).catch((e) => console.log(e));
+  const PicImage = async () => {
+    try {
+      const res = await DocumentPicker.pick({
+        type: [DocumentPicker.types.images],
+        presentationStyle: "fullScreen",
+      });
+
+      setProfilePic(res[0]);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        // User cancelled the picker, exit any dialogs or menus and mo
+        Toast.showWithGravity(
+          "Picture is not select",
+          Toast.SHORT,
+          Toast.BOTTOM
+        );
+        Toast;
+      }
+    }
   };
 
   // ========================= END ===========================
@@ -103,8 +113,7 @@ const SignUpScreen = (props) => {
       if (res.status == 1) {
         setIsLoading(false);
         props.navigation.navigate("OtpScreen", {
-          otp: res.otp,
-          phoneNumber: `+${withCallingCode + isNumber}`,
+          phoneNumber: `+${withCallingCode + v.phone}`,
         });
         dispatch(
           SignUP(
@@ -279,7 +288,9 @@ const SignUpScreen = (props) => {
                       }}
                       resizeMode="cover"
                     />
-                    <Text style={styles.uploadTextStyle}>Upload Picture</Text>
+                    {profilePic.length == 0 ? (
+                      <Text style={styles.uploadTextStyle}>Upload Picture</Text>
+                    ) : null}
                     <TouchableOpacity
                       style={{
                         backgroundColor: colors.black,

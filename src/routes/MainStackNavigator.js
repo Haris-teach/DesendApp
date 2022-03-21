@@ -17,6 +17,11 @@ import PinScreen1 from "../screens/auth/PinScreen1";
 import PinScreen2 from "../screens/auth/PinScreen2";
 import ChatRoom from "../screens/otherScreens/ChatRoom";
 import TabScreen from "./BottomTabNavigator";
+import ChatList from "../screens/otherScreens/ChatListScreen";
+import ProfileScreen from "../screens/otherScreens/profileScreen";
+import ResetPinScreen from "../screens/auth/resetPin1";
+import ResetPin2Screen from "../screens/auth/resetPin2";
+import BlockedScreen from "../screens/otherScreens/BlockedUser";
 
 // ======================= END ==============================
 
@@ -61,15 +66,15 @@ const Stack = () => {
     console.log("Background notifications:    ", remoteMessage);
   });
 
-  useEffect(() => {
-    const unsubscribe = messaging().onMessage((remoteMessage) => {
-      console.log("unSubcribe  MESSAGE:   ", remoteMessage);
-    });
+  // useEffect(() => {
+  //   const unsubscribe = messaging().onMessage((remoteMessage) => {
+  //     console.log("unSubcribe  MESSAGE:   ", remoteMessage);
+  //   });
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, []);
 
   const AfterLoginAppContainer = () => {
     return (
@@ -80,8 +85,13 @@ const Stack = () => {
             headerShown: false,
           }}
         >
-          <RootStack.Screen name={"Home"} component={TabScreen} />
-          <RootStack.Screen name={"ChatRoom"} component={ChatRoom} />
+          <RootStack.Screen name="Home" component={TabScreen} />
+          <RootStack.Screen name="ChatRoom" component={ChatRoom} />
+          <RootStack.Screen name="ChatList" component={ChatList} />
+          <RootStack.Screen name="ProfileScreen" component={ProfileScreen} />
+          <RootStack.Screen name="ResetPin" component={ResetPinScreen} />
+          <RootStack.Screen name="ResetPin2" component={ResetPin2Screen} />
+          <RootStack.Screen name="BlockedScreen" component={BlockedScreen} />
         </RootStack.Navigator>
       </NavigationContainer>
     );

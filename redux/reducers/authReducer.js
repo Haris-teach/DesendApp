@@ -1,23 +1,28 @@
 import {
+  CLIPBOARD,
   LOGIN_REQUEST,
   LOGOUT_REQUEST,
   SAVE_CONTACTS,
+  SETTINGSUPDATE,
   SIGN_UP,
+  UPDATEPROFILE,
 } from "../actions/actionTypes";
 
 const INITIAL_STATE = {
   id: 1,
-  userName: "M.Haris",
-  firstName: "Muhammad",
-  lastName: "Haris",
-  email: "muhammadharis4999@gmail.com",
+  userName: "Dummy User",
+  firstName: "Dummy",
+  lastName: "User",
+  email: "DummyUser@gmail.com",
   isPhone: "090078601",
-  password: "123456",
+  password: "1111",
   profilePic: { fileName: "", type: "", uri: "" },
   uri: "",
   token: null,
   isLogin: false,
   contactsList: [],
+  status: "",
+  userSetting: {},
 };
 
 export default (state = INITIAL_STATE, action) => {
@@ -30,8 +35,11 @@ export default (state = INITIAL_STATE, action) => {
         firstName: action.payload.firstname,
         lastName: action.payload.lastname,
         id: action.payload.id,
-        phone: action.payload.phone,
+        isPhone: action.payload.phone,
         uri: action.payload.profileimage,
+        userName: `${action.payload.firstname} ${action.payload.lastname}`,
+        status: "Don't stop improvement",
+        userSetting: action.payload.usersetting,
       };
       break;
     case SIGN_UP:
@@ -52,16 +60,40 @@ export default (state = INITIAL_STATE, action) => {
         ...state,
         contactsList: action.payload,
       };
+      break;
+
+    case UPDATEPROFILE:
+      return {
+        ...state,
+        uri: action.payload.uri,
+        userName: action.payload.name,
+        status: action.payload.status,
+      };
+      break;
+
+    case SETTINGSUPDATE:
+      return {
+        ...state,
+        userSetting: action.payload,
+      };
+
     case LOGOUT_REQUEST:
       return {
         ...state,
+        id: 1,
+        userName: "Dummy User",
+        firstName: "Dummy",
+        lastName: "User",
+        email: "DummyUser@gmail.com",
+        isPhone: "090078601",
+        password: "1111",
+        profilePic: { fileName: "", type: "", uri: "" },
+        uri: "",
+        token: null,
         isLogin: false,
-        // token: null,
-        // userName: 'M.Haris',
-        // firstName: 'Muhammad',
-        // lastName: 'Haris',
-        // id: 1,
-        // email: 'muhammadharis4999@gmail.com',
+        contactsList: [],
+        status: "",
+        userSetting: {},
       };
       break;
 

@@ -21,7 +21,7 @@ import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
-import { getOtp } from "../../../httputils/httputils";
+import { getOtp, VerifyOTP } from "../../../httputils/httputils";
 
 // ====================== END =================================
 
@@ -36,7 +36,7 @@ const OTPScreen = (props) => {
   const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  //console.log(props.route.params.phoneNumber, props.route.params.otp);
+  console.log(props.route.params.phoneNumber);
 
   const OTPRef = useRef(null);
   const [timer, setTimer] = useState(true);
@@ -62,16 +62,33 @@ const OTPScreen = (props) => {
   const OtpVerify = () => {
     setIsLoading(true);
 
+    let params = {
+      phone: props.route.params.phoneNumber,
+      code: otpCode,
+    };
     if (otpCode == "") {
       Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
-    } else if (otpCode == props.route.params.otp) {
-      props.navigation.navigate("PinScreen1");
-      setIsLoading(false);
     } else {
-      Toast.show("Code is not verify", Toast.SHORT, ["UIAlertController"]);
-      setIsLoading(false);
+      VerifyOTP(params).then((res) => {
+        Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+        setIsLoading(false);
+        if (res.status == 1) {
+          props.navigation.navigate("PinScreen1");
+        }
+      });
     }
+
+    // if (otpCode == "") {
+    //   Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
+    //   setIsLoading(false);
+    // } else if (otpCode == props.route.params.otp) {
+    //   props.navigation.navigate("PinScreen1");
+    //   setIsLoading(false);
+    // } else {
+    //   Toast.show("Code is not verify", Toast.SHORT, ["UIAlertController"]);
+    //   setIsLoading(false);
+    // }
   };
 
   // ========================  END  ===============================
@@ -87,7 +104,7 @@ const OTPScreen = (props) => {
       {/* ====================== White BackGround ================= */}
 
       <View style={styles.subContainerStyle}>
-        <ScrollView style={{ flex: 0.5 }} showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.headingStyle}>Enter the Verification Code</Text>
 
           <View style={styles.otpCodeFullView}>
@@ -98,16 +115,36 @@ const OTPScreen = (props) => {
               keyboardType="number-pad"
               style={styles.otpInsideStyle}
               pinCount={4}
-              autoFocusOnLoad
               codeInputFieldStyle={styles.otpCodeFieldStyle}
+              autoFocusOnLoad={false}
               onCodeFilled={(code) => {
                 // setClearOTP(false);
                 console.log(`Code is ${code}, you are good to go!`);
                 setOtpCode(code);
               }}
-              editable={true}
-              //clearInputs={true}
             />
+            {/* <OTPInputView
+            style={{
+              height: hp(10),
+              paddingHorizontal: wp(10),
+              alignItems: "center",
+            }}
+            pinCount={4}
+            autoFocusOnLoad={false}
+            codeInputFieldStyle={{
+              width: wp(15),
+              height: hp(8),
+              borderRadius: wp(5),
+              borderColor: "transparent",
+              fontSize: wp(5),
+              color: "#FF414C",
+              backgroundColor: "#F5F5F5",
+            }}
+            onCodeFilled={(code) => {
+              console.log(`Code is ${code}, you are good to go!`);
+              setOtpCode(code);
+            }}
+          /> */}
           </View>
 
           <View style={styles.otpResendViewStyle}>

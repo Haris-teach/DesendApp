@@ -23,6 +23,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { Dialog } from "react-native-simple-dialogs";
 import { useSelector, useDispatch } from "react-redux";
 import Toast from "react-native-simple-toast";
+import { now } from "moment";
 
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
@@ -50,6 +51,7 @@ const ContactScreen = (props) => {
   const token = useSelector((state) => state.authReducer.token);
   const isProfile = useSelector((state) => state.authReducer.uri);
   const sortedArray = [];
+
   const [listData, setListData] = useState([
     {
       key: 1,
@@ -75,19 +77,26 @@ const ContactScreen = (props) => {
     },
   ]);
   const [allSavedContacts, setAllSavedContacts] = useState([]);
+  const [isContactList, setIsContactList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchState, setSearchState] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const sectionList = useRef(null);
+
   const [multiUserId, setMultiUserId] = useState([]);
   const [isLongPress, setIsLongPress] = useState(false);
   const [multiUserName, setMultiUserName] = useState([]);
   const [multiUserPhone, setMultiUserPhone] = useState([]);
   const [multiUserProfile, setMultiUserProfile] = useState([]);
   const [isDialogVisible, setIsDialogVisible] = useState(false);
+  const [isRightIcon, setIsRightIcon] = useState(false);
+  const [isSearch, setIsSearch] = useState(null);
 
   useEffect(() => {
     getContacts();
+    setMultiUserId([]);
+    setMultiUserName([]);
+    setMultiUserPhone([]);
+    setMultiUserProfile([]);
   }, [isFocused]);
 
   const getContacts = async () => {
@@ -119,18 +128,23 @@ const ContactScreen = (props) => {
     Contacts.getAll()
       .then((contacts) => {
         let array = [];
+        let contactsArr = [];
 
         contacts.forEach((element) => {
           element.phoneNumbers.forEach((i) => {
             array.push(i.number);
           });
+          if (element.phoneNumbers.length != 0) {
+            contactsArr.push(element);
+          }
         });
 
         let params = {
           contacts: array,
         };
+        let arr = [...new Set(contactsArr)];
         let param = {
-          contacts: contacts,
+          contacts: arr,
         };
         contactsync(params, token).then((res) => {
           if (res.status == 1) {
@@ -143,7 +157,7 @@ const ContactScreen = (props) => {
                     familyName: i.lastName,
                     givenName: `${i.firstName} ${i.lastName}`,
                     isFavorite: false,
-                    phoneNumbers: [i.phone],
+                    phoneNumbers: i.phone,
                     createdAt: i.createdAt,
                     thumbnailPath: i.profileImg,
                     isRegister: i.isregister,
@@ -242,7 +256,23 @@ const ContactScreen = (props) => {
           }
         }}
         mainPress={() => {
-          if (!item.isRegister) {
+          if (item.isRegister && isLongPress) {
+            multiUserId.push(item.recordID);
+            setMultiUserId(multiUserId);
+            multiUserName.push(item.givenName);
+            setMultiUserName(multiUserName);
+            multiUserPhone.push(item.phoneNumbers);
+            setMultiUserPhone(multiUserPhone);
+            multiUserProfile.push(item.thumbnailPath);
+            setMultiUserProfile(multiUserProfile);
+          } else if (item.isRegister && !isLongPress) {
+            props.navigation.navigate("ChatRoom", {
+              userName: item.givenName,
+              userId: [item.recordID],
+              userProfile: item.thumbnailPath,
+              userNumber: item.phoneNumbers,
+            });
+          } else {
             setIsDialogVisible(true);
           }
         }}
@@ -289,7 +319,7 @@ const ContactScreen = (props) => {
         onTouchOutside={() => setIsDialogVisible(false)}
         dialogStyle={{ borderRadius: wp(4) }}
       >
-        <Text>Send invite message</Text>
+        <Text style={{ color: colors.black }}>Send invite message</Text>
         <View style={styles.dialogBtnContainerStyle}>
           <TouchableOpacity
             style={[
@@ -313,15 +343,66 @@ const ContactScreen = (props) => {
     );
   };
 
+  // Search Function
+
+  const ContactSearch = () => {
+    if (isSearch != null) {
+      let term = isSearch.toLowerCase();
+      let obj = sortedArray.filter(
+        (item) => item.data[0].givenName.toLowerCase().indexOf(term) > -1
+      );
+      setIsContactList(obj);
+    }
+  };
+
   return (
     <View style={styles.mainContainer}>
       {RenderModal()}
-      <RNHeader
-        leftIcon={<BackArrow alignSelf="center" />}
-        leftOnPress={() => dispatch(SignOut())}
-        headerText="   "
-        rightIcon={<Search alignSelf="center" />}
-      />
+      {!isRightIcon ? (
+        <RNHeader
+          leftIcon={<BackArrow alignSelf="center" />}
+          //leftOnPress={() => dispatch(SignOut())}
+          headerText="   "
+          rightIcon={<Search alignSelf="center" />}
+          rightOnPress={() => setIsRightIcon(true)}
+        />
+      ) : (
+        <View
+          style={{
+            height: hp(6),
+            flexDirection: "row",
+            justifyContent: "space-between",
+            marginHorizontal: wp(3),
+            marginTop: hp(5),
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.bWhite,
+              borderRadius: wp(2),
+              width: wp(80),
+              marginLeft: wp(4),
+            }}
+          >
+            <TextInput
+              placeholder="Search"
+              style={{ marginLeft: wp(4), color: colors.black }}
+              onChangeText={(text) => setIsSearch(text)}
+              value={isSearch}
+            />
+          </View>
+          <TouchableOpacity
+            style={{ justifyContent: "center" }}
+            onPress={() => {
+              setIsRightIcon(false);
+              ContactSearch();
+            }}
+          >
+            <Search alignSelf="center" marginRight={wp(2)} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <Text style={styles.loginTextStyle}>Contacts</Text>
       {isLongPress ? (
         <TouchableOpacity
@@ -339,7 +420,6 @@ const ContactScreen = (props) => {
           <Text style={styles.doneTextStyle}>Done</Text>
         </TouchableOpacity>
       ) : null}
-
       <View style={styles.subContainerStyle}>
         <View style={{ marginTop: hp(4) }}>
           <FlatList
@@ -385,10 +465,9 @@ const ContactScreen = (props) => {
               color={colors.black}
               style={styles.activityIndicatorStyle}
             />
+          ) : sortedArray.length == 0 ? (
+            <Text style={styles.noThreadStyle}>No record found</Text>
           ) : (
-            // ) : sortedArray.length == 0 ? (
-            //   <Text style={styles.noThreadStyle}>Contacts not found</Text>
-            // )
             <SectionList
               keyExtractor={(item, index) => `${item.key}+${index}`}
               refreshing={isLoading}
@@ -396,7 +475,9 @@ const ContactScreen = (props) => {
                 loadContacts();
               }}
               renderSectionHeader={defaultSectionHeader}
-              sections={sortedArray}
+              sections={
+                isSearch == null || isSearch == "" ? sortedArray : isContactList
+              }
               renderItem={renderItems}
               showsVerticalScrollIndicator={false}
             />

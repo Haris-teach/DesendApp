@@ -7,7 +7,6 @@ import {
   Dimensions,
   Image,
   SectionList,
-  Clipboard,
   Text,
   TextInput,
   ActivityIndicator,
@@ -15,9 +14,12 @@ import {
   PermissionsAndroid,
   Linking,
 } from "react-native";
+import Clipboard from "@react-native-community/clipboard";
 import { GiftedChat } from "react-native-gifted-chat";
 import * as ImagePicker from "react-native-image-picker";
-import moment from "moment";
+import moment, { now } from "moment";
+import Toast from "react-native-simple-toast";
+import { useIsFocused } from "@react-navigation/native";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
@@ -27,10 +29,11 @@ import { SwipeListView } from "react-native-swipe-list-view";
 import Popover from "react-native-popover-view";
 import { useSelector, useDispatch } from "react-redux";
 import firestore from "@react-native-firebase/firestore";
-import storage from "@react-native-firebase/storage";
+import ImageView from "react-native-image-viewing";
 import DocumentPicker from "react-native-document-picker";
 var FormData = require("form-data");
 import { Dialog } from "react-native-simple-dialogs";
+import GetLocation from "react-native-get-location";
 
 import { GetMediaUrl } from "../../../httputils/httputils";
 import ContactCardComponent from "../../../components/ContactCardComponent/ContactCardComponent";
@@ -55,47 +58,62 @@ import More from "../../../assets/images/svgs/more.svg";
 import Delete from "../../../assets/images/svgs/delete.svg";
 import fonts from "../../../assets/fonts/fonts";
 import { colors } from "../../../constants/colors";
+import Farword from "../../../assets/images/svgs/forward.svg";
+import CopyIcon from "../../../assets/images/svgs/copy.svg";
 
 const ChatRoom = (props) => {
+  const dispatch = useDispatch();
+  const isFocused = useIsFocused();
+
   const isProfile = useSelector((state) => state.authReducer.uri);
   const currentUserId = useSelector((state) => state.authReducer.id);
   const userName = useSelector((state) => state.authReducer.firstName);
   const token = useSelector((state) => state.authReducer.token);
+  const number = useSelector((state) => state.authReducer.isPhone);
   const otherName = props.route.params.userName;
   const otherNumber = props.route.params.userNumber;
+
   const userID = props.route.params.userId;
   const otherProfile = props.route.params.userProfile;
   let chatId = createChatId([...[currentUserId], ...userID]);
 
+  let OtherUsersIds = [...new Set([...[currentUserId], ...userID])];
+
+  const [farwordMsg, setFarwordMsg] = useState(props.route.params.farwordMsg);
+
   const [messages, setMessages] = useState([]);
-  const [textMsg, setTextMsg] = useState("");
+  const [textMsg, setTextMsg] = useState(
+    farwordMsg != undefined && farwordMsg.image == null ? farwordMsg.text : ""
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const [isPlusPress, setIsPlusPress] = useState(false);
   const [isIndex, setIsIndex] = useState(1);
-  const [url, setUrl] = useState([]);
-  const [camUri, setcamUri] = useState(
-    "https://toppng.com/uploads/preview/camera-png-11552960266mzp8rla14x.png"
+  const [url, setUrl] = useState(
+    farwordMsg != undefined && farwordMsg.image != null
+      ? [farwordMsg.image]
+      : []
   );
-  const [gallUri, setgallUri] = useState(
-    "https://png.pngtree.com/png-clipart/20190614/original/pngtree-gallery-vector-icon-png-image_3791336.jpg"
-  );
-  const [images, setImages] = useState([
-    {
-      uri: "https://png.pngtree.com/png-clipart/20190614/original/pngtree-gallery-vector-icon-png-image_3791336.jpg",
-      width: 20,
-      height: 20,
-      type: "image/jpeg",
-    },
-  ]);
+
   const [isRecording, setIsRecording] = useState(false);
   var [timerState, setTimerState] = useState(0);
-  const [fileUri, setFileURI] = useState(null);
-  const [filePath, setFilePath] = useState(null);
-  const [files, setFiles] = useState([]);
+
+  const [files, setFiles] = useState(
+    farwordMsg != undefined && farwordMsg.image != null
+      ? [farwordMsg.image]
+      : []
+  );
   const [isPaused, setIsPaused] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [contactObj, setContactObj] = useState(null);
+
+  const [isLocation, setIsLocation] = useState({
+    lan: "74.3428052",
+    lat: "31.4757274",
+  });
+  const [isLocLoading, setIsLocLoading] = useState(false);
+  const [isUri, setIsUri] = useState("");
+  const [isImageViwer, setIsImageViwer] = useState(false);
 
   const timer = () => {
     let count = timerState;
@@ -143,32 +161,54 @@ const ChatRoom = (props) => {
       .orderBy("createdAt", "desc")
       .onSnapshot({ includeMetadataChanges: true }, (res) => {
         let msgs = [];
-        res.docs.forEach((msg) => {
-          if (msg.exists) {
-            const {
-              id,
-              text,
-              createdAt,
-              user: { name, _id, avatar },
-              image,
-            } = msg.data();
-            let data = {
-              id,
-              text,
-              docId: msg.id,
-              createdAt: moment(createdAt),
-              user: { name, _id, avatar },
-              image,
-            };
-            msgs.push(data);
-          }
-        });
-        let Data = msgs.sort(function compare(a, b) {
-          var dateA = new Date(a.createdAt);
-          var dateB = new Date(b.createdAt);
-          return dateB - dateA;
-        });
-        setMessages(Data);
+
+        if (res != null) {
+          res.docs.forEach((msg) => {
+            if (msg.exists) {
+              const {
+                text,
+                createdAt,
+                isSeen,
+                farword,
+                user: { name, _id, avatar, number },
+                image,
+                visibleTo,
+              } = msg.data();
+              if (!isSeen && _id != currentUserId && isFocused) {
+                firestore()
+                  .collection("chats")
+                  .doc(chatId)
+                  .collection("messages")
+                  .doc(msg.id)
+                  .update({ isSeen: true });
+              }
+              let data = {
+                id: now(),
+                text,
+                farword,
+                isSeen,
+                docId: msg.id,
+                createdAt: moment(createdAt),
+                visibleTo,
+                user: { name, _id, avatar, number },
+                image,
+              };
+
+              if (visibleTo.includes(currentUserId)) {
+                msgs.push(data);
+              }
+            }
+          });
+
+          let Data = msgs.sort(function compare(a, b) {
+            var dateA = new Date(a.createdAt);
+            var dateB = new Date(b.createdAt);
+            return dateB - dateA;
+          });
+          setMessages(Data);
+        } else {
+          setMessages([]);
+        }
       });
   }, []);
 
@@ -178,21 +218,20 @@ const ChatRoom = (props) => {
     if (url.length == 0) {
       sendMessage(
         {
-          id: isIndex,
           text: textMsg,
           image: null,
+          farword: farwordMsg != undefined ? true : false,
           createdAt: moment().format(),
-          sent: true,
-          isSeen: false,
-          received: false,
-          pending: true,
           otherUserName: otherName,
-          otherUserId: userID,
+          visibleTo: OtherUsersIds,
+          otherUserId: OtherUsersIds,
           userNumber: otherNumber,
+          isSeen: false,
           user: {
-            _id: currentUserId,
+            _id: parseInt(currentUserId),
             name: userName,
             avatar: "https://placeimg.com/140/140/any",
+            number: number,
           },
         },
 
@@ -202,21 +241,21 @@ const ChatRoom = (props) => {
       url.map((i) => {
         sendMessage(
           {
-            id: isIndex,
+            farword: farwordMsg != undefined ? true : false,
             text: textMsg,
             image: i,
             createdAt: moment().format(),
-            sent: true,
-            isSeen: false,
-            received: false,
-            pending: true,
             otherUserName: otherName,
-            otherUserId: userID,
+            otherUserId: OtherUsersIds,
+            visibleTo: OtherUsersIds,
+            isSeen: false,
+
             userNumber: otherNumber,
             user: {
-              _id: currentUserId,
+              _id: parseInt(currentUserId),
               name: userName,
               avatar: "https://placeimg.com/140/140/any",
+              number: number,
             },
           },
 
@@ -224,8 +263,11 @@ const ChatRoom = (props) => {
         );
       });
     }
+    setTextMsg("");
     files.splice(0, files.length);
     url.splice(0, url.length);
+    setIsIndex(isIndex + 1);
+    setFarwordMsg(undefined);
   };
 
   const renderInputToolbar = (props) => {
@@ -366,18 +408,23 @@ const ChatRoom = (props) => {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 // backgroundColor: "red",
-                marginLeft: wp(3),
+                marginLeft: wp(2.2),
               }}
             >
               <Text
                 style={{
                   color: colors.black,
-                  fontFamily: fonts.medium,
+                  fontFamily: props.currentMessage.farword
+                    ? fonts.regular
+                    : fonts.medium,
                   fontSize: wp(4),
                   alignSelf: "center",
+                  opacity: props.currentMessage.farword ? 0.2 : 1,
                 }}
               >
-                {props.currentMessage.user.name}
+                {props.currentMessage.farword
+                  ? "Farword message"
+                  : props.currentMessage.user.name}
               </Text>
               <Text
                 style={{
@@ -393,7 +440,8 @@ const ChatRoom = (props) => {
               </Text>
             </View>
 
-            <View
+            <TouchableOpacity
+              onPress={() => Linking.openURL(props.currentMessage.text)}
               style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
               <Text
@@ -409,95 +457,181 @@ const ChatRoom = (props) => {
               >
                 {props.currentMessage.text}
               </Text>
-            </View>
+            </TouchableOpacity>
 
-            {props.currentMessage.user._id == currentUserId ? (
+            {props.currentMessage.user._id != currentUserId ? null : props
+                .currentMessage.isSeen ? (
               <DoubleTick alignSelf="flex-end" />
-            ) : null}
+            ) : (
+              <SingleTick alignSelf="flex-end" />
+            )}
           </View>
         ) : type[0] == "image" ? (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(Data.uri)}
-            style={styles.mediaStyle}
-          >
-            <Image
-              source={{ uri: Data.uri }}
-              style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
+          <>
+            {props.currentMessage.farword ? (
+              <Text
+                style={{
+                  color: colors.black,
+                  fontFamily: props.currentMessage.farword
+                    ? fonts.regular
+                    : fonts.medium,
+                  fontSize: wp(4),
+                  alignSelf: "center",
+                  opacity: props.currentMessage.farword ? 0.2 : 1,
+                }}
+              >
+                "Farword message"
+              </Text>
+            ) : null}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => {
+                setIsUri(Data.uri);
+                setIsImageViwer(true);
+              }}
+              style={styles.mediaStyle}
+            >
+              <Image
+                source={{ uri: Data.uri }}
+                style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+          </>
         ) : type[0] == "video" ? (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(Data.uri)}
-            style={styles.mediaStyle}
-          >
-            <Video
-              source={{ uri: Data.uri }}
-              style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
-              resizeMode="cover"
-              //controls={true}
-            />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(Data.uri)}
-            style={{
-              width: wp(70),
-              height: hp(8),
-              backgroundColor:
-                props.currentMessage.user._id == currentUserId
-                  ? colors.sendBubbleColor
-                  : colors.reciveBubbleColor,
-              borderRadius: wp(5),
-            }}
-          >
-            <View
-              style={{
-                borderRadius: wp(2),
-                flexDirection: "row",
+          <>
+            {props.currentMessage.farword ? (
+              <Text
+                style={{
+                  color: colors.black,
+                  fontFamily: props.currentMessage.farword
+                    ? fonts.regular
+                    : fonts.medium,
+                  fontSize: wp(4),
+                  alignSelf: "center",
+                  opacity: props.currentMessage.farword ? 0.2 : 1,
+                }}
+              >
+                "Farword message"
+              </Text>
+            ) : null}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => Linking.openURL(Data.uri)}
+              style={styles.mediaStyle}
+            >
+              <Video
+                source={{ uri: Data.uri }}
+                style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
+                resizeMode="cover"
+                //controls={true}
+              />
+            </TouchableOpacity>
+          </>
+        ) : type[0] == "location" ? (
+          <>
+            {props.currentMessage.farword ? (
+              <Text
+                style={{
+                  color: colors.black,
+                  fontFamily: props.currentMessage.farword
+                    ? fonts.regular
+                    : fonts.medium,
+                  fontSize: wp(4),
+                  alignSelf: "center",
+                  opacity: props.currentMessage.farword ? 0.2 : 1,
+                }}
+              >
+                "Farword message"
+              </Text>
+            ) : null}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.mediaStyle}
+              onPress={() => {
+                const scheme = Platform.select({
+                  ios: "maps:0,0?q=",
+                  android: "geo:0,0?q=",
+                });
+                const latLng = `${Data.location.lat},${Data.location.lan}`;
+                const label = "Get location";
+                const url = Platform.select({
+                  ios: `${scheme}${label}@${latLng}`,
+                  android: `${scheme}${latLng}(${label})`,
+                });
+                Linking.openURL(url);
               }}
             >
               <Image
                 source={{
-                  uri:
-                    name[1] == "docx"
-                      ? "https://www.macworld.com/wp-content/uploads/2021/12/word-app-icon.png"
-                      : name[1] == "pdf"
-                      ? "https://www.iconpacks.net/icons/2/free-pdf-icon-1512-thumb.png"
-                      : "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Circle-icons-folder.svg/1024px-Circle-icons-folder.svg.png",
+                  uri: "https://camo.githubusercontent.com/1190eb11c3b2b2aef7ab15be8c95dc2ff82b34cfa1c49a70793f0fab2cf5e552/687474703a2f2f692e67697068792e636f6d2f7854636e5436575670776c4369516e4657382e676966",
                 }}
-                style={{
-                  width: wp(15),
-                  height: wp(15),
-                  borderRadius: wp(2),
-                  alignSelf: "center",
-                }}
+                style={{ width: "100%", height: "100%", borderRadius: wp(5) }}
                 resizeMode="cover"
               />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            {props.currentMessage.farword ? (
               <Text
                 style={{
-                  alignSelf: "center",
                   color: colors.black,
-                  fontFamily: fonts.regular,
-                  fontSize: wp(3),
-                  marginRight: wp(2),
-                  width: wp(50),
+                  fontFamily: props.currentMessage.farword
+                    ? fonts.regular
+                    : fonts.medium,
+                  fontSize: wp(4),
+                  alignSelf: "center",
+                  opacity: props.currentMessage.farword ? 0.2 : 1,
                 }}
               >
-                {Data.name}
+                "Farword message"
               </Text>
-            </View>
+            ) : null}
+            <TouchableOpacity
+              onPress={() => Linking.openURL(Data.uri)}
+              style={{
+                width: wp(70),
+                height: hp(8),
+                backgroundColor:
+                  props.currentMessage.user._id == currentUserId
+                    ? colors.sendBubbleColor
+                    : colors.reciveBubbleColor,
+                borderRadius: wp(5),
+              }}
+            >
+              <View
+                style={{
+                  borderRadius: wp(2),
+                  flexDirection: "row",
+                }}
+              >
+                <Image
+                  source={{
+                    uri:
+                      name[1] == "docx"
+                        ? "https://www.macworld.com/wp-content/uploads/2021/12/word-app-icon.png"
+                        : name[1] == "pdf"
+                        ? "https://www.iconpacks.net/icons/2/free-pdf-icon-1512-thumb.png"
+                        : "https://mpng.subpng.com/20180601/zgt/kisspng-apple-worldwide-developers-conference-ios-11-app-s-5b11dda265fd86.6064530315278975064178.jpg",
+                  }}
+                  style={styles.msgIconStyle}
+                  resizeMode="cover"
+                />
+                <Text style={styles.msgNameStyle}>{Data.name}</Text>
+              </View>
 
-            {/* {props.currentMessage.user._id == currentUserId ? (
+              {/* {props.currentMessage.user._id == currentUserId ? (
               <DoubleTick alignSelf="flex-end" />
             ) : null} */}
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </>
         )}
       </>
     );
   };
-  const renderHiddenItem = (data, rowMap, props) => {
-    var Data = props.currentMessage.image;
+  const renderHiddenItem = (data, rowMap, prop) => {
+    var Data = prop.currentMessage.image;
     if (Data != null) {
       var type = Data.type.split("/");
       var name = Data.name.split(".");
@@ -510,7 +644,7 @@ const ChatRoom = (props) => {
         style={{
           flex: 1,
           alignSelf:
-            props.currentMessage.user._id != currentUserId
+            prop.currentMessage.user._id != currentUserId
               ? "flex-end"
               : "flex-start",
           marginRight: wp(5),
@@ -524,31 +658,42 @@ const ChatRoom = (props) => {
             </TouchableOpacity>
           }
         >
-          <View
-            style={{
-              backgroundColor: "transparent",
-              width: wp(40),
-            }}
-          >
-            <TouchableOpacity style={styles.popUpRowStyle}>
+          <>
+            <TouchableOpacity
+              style={styles.popUpRowStyle}
+              onPress={() =>
+                props.navigation.replace("ChatList", {
+                  currentMessage: prop.currentMessage,
+                })
+              }
+            >
               <Text style={styles.popUpTextStyle}>Forward</Text>
-              <Delete alignSelf="center" width={wp(5)} height={hp(5)} />
+              <Farword alignSelf="center" width={wp(5)} height={hp(5)} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.popUpRowStyle}>
-              <Text style={styles.popUpTextStyle}>Copy</Text>
-              <Delete alignSelf="center" width={wp(5)} height={hp(5)} />
+
+            <TouchableOpacity
+              style={styles.popUpRowStyle}
+              onPress={() => {
+                copyToClipboard(rowMap, data);
+              }}
+            >
+              <Text style={styles.popUpTextStyle} selectable={true}>
+                Copy
+              </Text>
+              <CopyIcon alignSelf="center" width={wp(5)} height={hp(5)} />
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.popUpRowStyle}
               onPress={() => {
                 closeRow(rowMap, 0);
-                DeleteSingleMsg(props.currentMessage.docId);
+                DeleteSingleMsg(prop);
               }}
             >
               <Text style={styles.popUpTextStyle}>Delete</Text>
               <Delete alignSelf="center" width={wp(5)} height={hp(5)} />
             </TouchableOpacity>
-          </View>
+          </>
         </Popover>
       </View>
     );
@@ -560,15 +705,26 @@ const ChatRoom = (props) => {
   };
   const renderSectionHeader = ({ section }) => <Text>{section.title}</Text>;
 
-  const DeleteSingleMsg = (msgId) => {
+  const DeleteSingleMsg = (props) => {
     // define document location (Collection Name > Document Name > Collection Name >)
-    var docRef = firestore()
-      .collection("chats")
-      .doc(chatId)
-      .collection("messages");
-
-    // delete the document
-    docRef.doc(msgId).delete();
+    if (props.currentMessage.user._id == currentUserId) {
+      var docRef = firestore()
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages");
+      // delete the document
+      docRef.doc(props.currentMessage.docId).delete();
+    } else {
+      const arr = props.currentMessage.visibleTo.filter(
+        (item) => item != currentUserId
+      );
+      firestore()
+        .collection("chats")
+        .doc(chatId)
+        .collection("messages")
+        .doc(props.currentMessage.docId)
+        .update({ visibleTo: arr });
+    }
   };
 
   // Get document or any file function
@@ -619,6 +775,10 @@ const ChatRoom = (props) => {
     if (item != null) {
       var type = item.type.split("/");
       var name = item.name.split(".");
+      // if (type[0] == "location") {
+      //   setUrl([]);
+      //   setFiles([]);
+      // }
     } else {
       type = ["image"];
       name = ["docx"];
@@ -648,6 +808,24 @@ const ChatRoom = (props) => {
               resizeMode="contain"
               style={styles.renderMediaStyle}
             />
+          ) : type[0] == "location" ? (
+            <View style={styles.renderMediaStyle}>
+              <Image
+                source={{
+                  uri: "https://camo.githubusercontent.com/1190eb11c3b2b2aef7ab15be8c95dc2ff82b34cfa1c49a70793f0fab2cf5e552/687474703a2f2f692e67697068792e636f6d2f7854636e5436575670776c4369516e4657382e676966",
+                }}
+                style={{ width: "100%", height: "85%", borderRadius: wp(5) }}
+                resizeMode="cover"
+              />
+              <Text style={styles.loctionStyle}>
+                latitude:{"     "}
+                <Text style={{ fontWeight: "bold" }}>{item.location.lat}</Text>
+              </Text>
+              <Text style={styles.loctionStyle}>
+                longitude:{"  "}
+                <Text style={{ fontWeight: "bold" }}>{item.location.lan}</Text>
+              </Text>
+            </View>
           ) : (
             <Image
               source={{
@@ -656,7 +834,7 @@ const ChatRoom = (props) => {
                     ? "https://www.macworld.com/wp-content/uploads/2021/12/word-app-icon.png"
                     : name[1] == "pdf"
                     ? "https://www.iconpacks.net/icons/2/free-pdf-icon-1512-thumb.png"
-                    : "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Circle-icons-folder.svg/1024px-Circle-icons-folder.svg.png",
+                    : "https://mpng.subpng.com/20180601/zgt/kisspng-apple-worldwide-developers-conference-ios-11-app-s-5b11dda265fd86.6064530315278975064178.jpg",
               }}
               pictureInPicture={true}
               resizeMode="contain"
@@ -810,7 +988,7 @@ const ChatRoom = (props) => {
             profile: item.thumbnailPath,
           });
           setTextMsg(
-            `Name:  ${item.givenName}                                Number:  ${item.phoneNumbers[0]}`
+            `Name:  ${item.givenName}                                Number:  ${item.phoneNumbers}`
           );
           setIsVisible(false);
           setIsPlusPress(false);
@@ -829,35 +1007,107 @@ const ChatRoom = (props) => {
     return (
       <Dialog
         visible={isVisible}
-        title="Contacts"
-        titleStyle={{ alignSelf: "center" }}
         onTouchOutside={() => setIsVisible(false)}
-        dialogStyle={{
-          borderRadius: wp(4),
-          width: wp(100),
-          height: hp(100),
-          marginLeft: wp(-5),
-        }}
+        dialogStyle={styles.dialogStyle}
       >
-        <SectionList
-          keyExtractor={(item, index) => `${item.key}+${index}`}
-          renderSectionHeader={defaultSectionHeader}
-          sections={sortedArray}
-          renderItem={renderItems}
-          showsVerticalScrollIndicator={false}
-        />
+        <View>
+          <View style={styles.contactsHeaderStyle}>
+            <TouchableOpacity
+              onPress={() => setIsVisible(false)}
+              style={{
+                justifyContent: "center",
+                marginLeft: wp(10),
+              }}
+            >
+              <BackArrow alignSelf="center" />
+            </TouchableOpacity>
+            <Text style={styles.contactsTextStyle}>Contacts</Text>
+          </View>
+          <View style={{ height: hp(85), marginTop: hp(2) }}>
+            <SectionList
+              keyExtractor={(item, index) => `${item.key}+${index}`}
+              renderSectionHeader={defaultSectionHeader}
+              sections={sortedArray}
+              renderItem={renderItems}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </View>
       </Dialog>
     );
+  };
+
+  //Get current location function
+
+  const GetCurrentLocation = () => {
+    setIsLocLoading(true);
+
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    })
+      .then((location) => {
+        setIsLocLoading(false);
+        setIsPlusPress(false);
+        setIsLocation({
+          lat: location.latitude,
+          lan: location.longitude,
+        });
+
+        setUrl([
+          {
+            name: "Map",
+            type: "location/map",
+            location: isLocation,
+            uri: "https://media.wired.com/photos/59269cd37034dc5f91bec0f1/master/pass/GoogleMapTA.jpg",
+          },
+        ]);
+        setFiles([
+          {
+            name: "User Current Location",
+            type: "location/map",
+            location: isLocation,
+          },
+        ]);
+      })
+      .catch((error) => {
+        const { code, message } = error;
+        console.warn(code, message);
+      });
+  };
+
+  // Copy the String
+
+  const copyToClipboard = (rowMap, data) => {
+    if (data.item.image == null) {
+      Clipboard.setString(data.item.text);
+    } else {
+      Clipboard.setString(data.item.image.uri);
+    }
+    Toast.showWithGravity("Copied", Toast.SHORT, Toast.BOTTOM);
+
+    closeRow(rowMap, data.item.docId);
   };
 
   return (
     <View style={styles.mainContainer}>
       {RenderModal()}
+      <ImageView
+        images={[
+          {
+            uri: isUri,
+          },
+        ]}
+        imageIndex={0}
+        visible={isImageViwer}
+        onRequestClose={() => setIsImageViwer(false)}
+        swipeToCloseEnabled={false}
+      />
       <View style={styles.mainHeaderContainer}>
         <TouchableOpacity
           onPress={() => {
             if (url.length == 0) {
-              props.navigation.goBack();
+              props.navigation.replace("Home", { screen: "Message" });
             } else {
               setUrl([]);
               setFiles([]);
@@ -906,11 +1156,38 @@ const ChatRoom = (props) => {
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
                 data={files}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item, index) => index}
                 renderItem={flatListRender}
                 nestedScrollEnabled={true}
               />
-              <View>{renderInputToolbar()}</View>
+
+              <TouchableOpacity
+                style={{
+                  alignSelf: "center",
+                  backgroundColor: colors.floatBtnColor,
+                  width: wp(80),
+                  height: hp(5),
+                  borderRadius: wp(2),
+                  justifyContent: "center",
+                }}
+                onPress={() => {
+                  setIsIndex(isIndex + 1);
+                  onSend();
+                  setTextMsg("");
+                }}
+              >
+                <Text
+                  style={{
+                    color: "white",
+                    fontFamily: fonts.regular,
+                    fontSize: wp(5),
+                    alignSelf: "center",
+                    fontWeight: "bold",
+                  }}
+                >
+                  Send
+                </Text>
+              </TouchableOpacity>
             </>
           ) : (
             <GiftedChat
@@ -956,8 +1233,17 @@ const ChatRoom = (props) => {
               >
                 <GifIcon />
               </TouchableOpacity>
-              <TouchableOpacity>
-                <LocationIcon />
+              <TouchableOpacity onPress={() => GetCurrentLocation()}>
+                {isLocLoading ? (
+                  <View style={{ justifyContent: "center" }}>
+                    <ActivityIndicator
+                      color={colors.black}
+                      alignSelf="center"
+                    />
+                  </View>
+                ) : (
+                  <LocationIcon />
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => Documentpicker([DocumentPicker.types.allFiles])}
@@ -1086,6 +1372,7 @@ const styles = {
   popUpRowStyle: {
     flexDirection: "row",
     justifyContent: "space-between",
+    width: wp(38),
     marginHorizontal: wp(2),
   },
   popUpTextStyle: {
@@ -1150,5 +1437,44 @@ const styles = {
     height: wp(15),
     borderRadius: wp(15),
     alignSelf: "center",
+  },
+  msgIconStyle: {
+    width: wp(15),
+    height: wp(15),
+    borderRadius: wp(2),
+    alignSelf: "center",
+  },
+  msgNameStyle: {
+    alignSelf: "center",
+    color: colors.black,
+    fontFamily: fonts.regular,
+    fontSize: wp(3),
+    marginLeft: wp(2),
+    width: wp(50),
+  },
+  loctionStyle: {
+    marginLeft: wp(10),
+    fontSize: wp(4),
+    color: colors.black,
+  },
+  dialogStyle: {
+    borderRadius: wp(4),
+    width: wp(100),
+    height: hp(100),
+    marginLeft: wp(-5),
+  },
+  contactsHeaderStyle: {
+    flexDirection: "row",
+    backgroundColor: "black",
+    height: hp(6.5),
+    marginTop: hp(-5),
+    marginHorizontal: wp(-10),
+  },
+  contactsTextStyle: {
+    color: "white",
+    alignSelf: "center",
+    marginLeft: wp(24),
+    fontSize: wp(6),
+    fontFamily: fonts.medium,
   },
 };

@@ -18,6 +18,8 @@ import { colors } from "../constants/colors";
 import ChatMainScreen from "../screens/otherScreens/ChatMainScreen";
 import SettingScreen from "../screens/otherScreens/SettingScreen";
 import ContactScreen from "../screens/otherScreens/ContactScreen";
+import BookScreen from "../screens/otherScreens/BookScreen";
+
 //==============================================================
 
 // ===================SVGS====================
@@ -25,11 +27,11 @@ import ContactScreen from "../screens/otherScreens/ContactScreen";
 import Contact from "../assets/images/svgs/contact.svg";
 import Msg from "../assets/images/svgs/msg.svg";
 import Setting from "../assets/images/svgs/setting.svg";
-
 import BContact from "../assets/images/svgs/bContact.svg";
 import BMsg from "../assets/images/svgs/bMsg.svg";
 import BSetting from "../assets/images/svgs/bSetting.svg";
-
+import Wallet from "../assets/images/svgs/wallet.svg";
+import BWallet from "../assets/images/svgs/bWallet.svg";
 //=================================================
 
 const Tab = createBottomTabNavigator();
@@ -65,6 +67,32 @@ const TabScreen = () => {
           tabBarIcon: ({ focused }) => {
             //dispatch(GetTabLocation('Call'));
             return !focused ? <Contact /> : <BContact />;
+          },
+
+          tabBarItemStyle: {
+            borderRadius: 15,
+            alignSelf: "center",
+            height: hp("7%"),
+            marginLeft: wp("3%"),
+            marginRight: wp("3%"),
+            marginBottom:
+              Platform.OS === "ios"
+                ? height_screen < 675
+                  ? hp(1)
+                  : height_screen == 736
+                  ? hp(0)
+                  : -hp(3.5)
+                : hp(1),
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Book"
+        component={BookScreen}
+        options={{
+          tabBarIcon: ({ focused }) => {
+            //dispatch(GetTabLocation('Call'));
+            return !focused ? <Wallet /> : <BWallet />;
           },
 
           tabBarItemStyle: {

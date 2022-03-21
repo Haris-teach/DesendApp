@@ -41,6 +41,7 @@ export const startNewChat = (message, users, chatId) => {
       members: users,
       createdAt: new Date(),
       chatId: chatId,
+      visibleTo: users,
     })
     .then((res) => {
       firestore()
