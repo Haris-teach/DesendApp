@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 
 import com.android.build.OutputFile
+apply plugin: 'com.google.gms.google-services'
 
 
 /**
@@ -130,9 +131,11 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-
+ dexOptions {
+       javaMaxHeapSize "3g"
+    }
     defaultConfig {
-        applicationId "com.desend"
+        applicationId "com.desend.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -193,6 +196,7 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation platform('com.google.firebase:firebase-bom:29.0.4')
     implementation 'com.google.firebase:firebase-analytics'
+       implementation 'com.facebook.android:facebook-android-sdk:latest.release'
      
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules

@@ -17,7 +17,7 @@ import OTPInputView from "@twotalltotems/react-native-otp-input";
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
 import fonts from "../../../assets/fonts/fonts";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
 
@@ -43,7 +43,7 @@ const PinScreen1 = (props) => {
       Toast.show("Enter pin code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
     } else {
-      props.navigation.navigate("PinScreen2");
+      props.navigation.navigate("PinScreen2", { pin: otpCode });
       setIsLoading(false);
     }
   };
@@ -70,21 +70,15 @@ const PinScreen1 = (props) => {
 
           <View style={styles.otpCodeFullView}>
             <OTPInputView
-              // ref={OTPRef}
               selectionColor={colors.black}
               secureTextEntry={true}
-              keyboardType="number-pad"
-              style={styles.otpInsideStyle}
+              // style={styles.otpInsideStyle}
               pinCount={4}
-              autoFocusOnLoad
               codeInputFieldStyle={styles.otpCodeFieldStyle}
               onCodeFilled={(code) => {
-                // setClearOTP(false);
-                console.log(`Code is ${code}, you are good to go!`);
                 setOtpCode(code);
               }}
-              editable={true}
-              //clearInputs={true}
+              autoFocusOnLoad={false}
             />
           </View>
 

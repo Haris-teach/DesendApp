@@ -13,6 +13,8 @@ const RNAvatar = (props) => {
         marginHorizontal: props.marginHorizontal,
         flexDirection: "row",
         justifyContent: props.justifyContent,
+        alignSelf: props.alignSelf,
+        marginTop: props.marginTop,
       }}
     >
       <Image

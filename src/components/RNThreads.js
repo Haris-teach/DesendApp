@@ -37,6 +37,7 @@ const RNThreads = (props) => {
               flexDirection: "row",
               justifyContent: "space-between",
               marginVertical: 2,
+              marginTop: props.marginTop,
             }}
           >
             <Text
@@ -83,16 +84,17 @@ const RNThreads = (props) => {
           </View>
         </View>
       </TouchableOpacity>
-
-      <View
-        style={{
-          borderWidth: 1,
-          borderColor: "#CACACA",
-          opacity: 0.2,
-          marginHorizontal: props.linemarginHorizontal,
-          marginTop: 10,
-        }}
-      />
+      {props.linemarginHorizontal ? (
+        <View
+          style={{
+            borderWidth: 0.7,
+            borderColor: "#CACACA",
+            opacity: 0.2,
+            marginHorizontal: props.linemarginHorizontal,
+            marginTop: 10,
+          }}
+        />
+      ) : null}
     </>
   );
 };

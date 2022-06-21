@@ -18,9 +18,10 @@ import Toast from "react-native-simple-toast";
 // ====================== Local Import =======================
 import RNHeader from "../../../components/RNHeader";
 import fonts from "../../../assets/fonts/fonts";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import RNTextInput from "../../../components/RNTextInput";
 import RNButton from "../../../components/RNButton";
+import { getOtp, VerifyOTP } from "../../../httputils/httputils";
 
 // ====================== END =================================
 
@@ -38,18 +39,68 @@ const OTPScreen = (props) => {
   const OTPRef = useRef(null);
   const [timer, setTimer] = useState(true);
 
+  const getOTPAgain = () => {
+    setIsLoading(true);
+    let params = {
+      phone: props.route.params.phoneNumber,
+    };
+
+    getOtp(params)
+      .then((res) => {
+        if (res.status == 1) {
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
+          Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+        }
+      })
+      .catch((e) => {
+        Toast.show("Request is not successful", Toast.SHORT, [
+          "UIAlertController",
+        ]);
+        setIsLoading(false);
+      });
+  };
+
   // ====================== OTP Verification function =====================
 
   const OtpVerify = () => {
     setIsLoading(true);
 
+    let params = {
+      phone: props.route.params.phoneNumber,
+      code: otpCode,
+    };
     if (otpCode == "") {
       Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
       setIsLoading(false);
     } else {
-      props.navigation.navigate("PinScreen1");
-      setIsLoading(false);
+      VerifyOTP(params)
+        .then((res) => {
+          Toast.show(res.message, Toast.SHORT, ["UIAlertController"]);
+          setIsLoading(false);
+          if (res.status == 1) {
+            props.navigation.navigate("PinScreen1");
+          }
+        })
+        .catch((e) => {
+          Toast.show("Request is not successful", Toast.SHORT, [
+            "UIAlertController",
+          ]);
+          setIsLoading(false);
+        });
     }
+
+    // if (otpCode == "") {
+    //   Toast.show("Enter verification code", Toast.SHORT, ["UIAlertController"]);
+    //   setIsLoading(false);
+    // } else if (otpCode == props.route.params.otp) {
+    //   props.navigation.navigate("PinScreen1");
+    //   setIsLoading(false);
+    // } else {
+    //   Toast.show("Code is not verify", Toast.SHORT, ["UIAlertController"]);
+    //   setIsLoading(false);
+    // }
   };
 
   // ========================  END  ===============================
@@ -65,7 +116,7 @@ const OTPScreen = (props) => {
       {/* ====================== White BackGround ================= */}
 
       <View style={styles.subContainerStyle}>
-        <ScrollView style={{ flex: 0.5 }} showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
           <Text style={styles.headingStyle}>Enter the Verification Code</Text>
 
           <View style={styles.otpCodeFullView}>
@@ -76,30 +127,24 @@ const OTPScreen = (props) => {
               keyboardType="number-pad"
               style={styles.otpInsideStyle}
               pinCount={4}
-              autoFocusOnLoad
               codeInputFieldStyle={styles.otpCodeFieldStyle}
+              autoFocusOnLoad={false}
               onCodeFilled={(code) => {
-                // setClearOTP(false);
-                console.log(`Code is ${code}, you are good to go!`);
                 setOtpCode(code);
               }}
-              editable={true}
-              //clearInputs={true}
             />
           </View>
 
           <View style={styles.otpResendViewStyle}>
             {!timer ? (
               <View style={styles.otpResendRowView}>
-                <Text style={styles.otpCodeTextStyle}>
-                  Did not receive the code yet?
-                </Text>
                 <TouchableOpacity
                   onPress={() => {
                     setTimer(!timer);
+                    getOTPAgain();
                   }}
                 >
-                  <Text style={styles.otpResendTextStyle}>Resend</Text>
+                  <Text style={styles.otpResendTextStyle}>Resend Code</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -137,6 +182,7 @@ const OTPScreen = (props) => {
               fontSize={wp(4)}
               fontFamily={fonts.medium}
               onPress={() => OtpVerify()}
+              //onPress={() => props.navigation.navigate("PinScreen1")}
             />
           </View>
         </ScrollView>
@@ -216,8 +262,8 @@ const styles = {
     marginHorizontal: wp(6),
   },
   otpResendRowView: {
-    flexDirection: "row",
     justifyContent: "center",
+    marginTop: hp(-3),
   },
   otpDigitStyle: {
     backgroundColor: "transparent",
@@ -226,10 +272,11 @@ const styles = {
     color: "#A3A3A3",
   },
   otpResendTextStyle: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.medium,
     color: "black",
-    fontWeight: "bold",
-    marginLeft: wp(0.9),
+    marginRight: wp(5),
+    alignSelf: "flex-end",
+    fontSize: wp(3.5),
   },
   otpCodeTextStyle: {
     textAlignVertical: "bottom",

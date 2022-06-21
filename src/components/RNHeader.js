@@ -37,6 +37,7 @@ const styles = {
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: wp(3),
+    marginTop: hp(4),
   },
   leftBtnStyle: {
     width: wp(10),

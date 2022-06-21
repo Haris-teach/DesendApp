@@ -9,21 +9,23 @@ import { View, StyleSheet, TouchableOpacity, Image, Text } from "react-native";
 
 //================================ Local Imported Files ======================================//
 
-import { colors } from "../../assets/colors/colors";
+import { colors } from "../../constants/colors";
 import fonts from "../../assets/fonts/fonts";
-import Msg from "../../assets/images/svgs/msg.svg";
+import Msg from "../../assets/images/svgs/bMsg.svg";
 import Call from "../../assets/images/svgs/call.svg";
 
 const ContactCardComponent = (props) => {
-  const { isFavorite } = props;
+  const { isFavorite, data } = props;
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
-        // props.selected && {backgroundColor: colors.app_black},
+        { backgroundColor: props.bgColor },
+        // props.selected && { backgroundColor: "rgba(5, 8, 17, 0.06)" },
       ]}
       onPress={props.mainPress}
+      onLongPress={props.onLongPress}
     >
       <View
         style={{
@@ -49,40 +51,42 @@ const ContactCardComponent = (props) => {
             ) : null} */}
           </View>
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignSelf: "center",
-          }}
-        >
-          <TouchableOpacity
-            onPress={props.callOnPress}
+        {data.isRegister && props.isIcons ? (
+          <View
             style={{
+              flexDirection: "row",
               alignSelf: "center",
-              justifyContent: "center",
-              height: hp(8),
-              width: wp(10),
-              marginRight: wp(2),
-              //backgroundColor: "red",
             }}
           >
-            <Call alignSelf="center" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={props.callOnPress}
+              style={{
+                alignSelf: "center",
+                justifyContent: "center",
+                height: hp(8),
+                width: wp(10),
+                marginRight: wp(2),
+                //backgroundColor: "red",
+              }}
+            >
+              <Call alignSelf="center" />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={props.msgOnPress}
-            style={{
-              alignSelf: "center",
-              justifyContent: "center",
-              height: hp(8),
-              width: wp(10),
-              marginRight: wp(2),
-              //backgroundColor: "red",
-            }}
-          >
-            <Msg alignSelf="center" />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              onPress={props.msgOnPress}
+              style={{
+                alignSelf: "center",
+                justifyContent: "center",
+                height: hp(8),
+                width: wp(10),
+                marginRight: wp(2),
+                //backgroundColor: "red",
+              }}
+            >
+              <Msg alignSelf="center" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
     </TouchableOpacity>
   );

@@ -1,47 +1,89 @@
-import { View, Text, ImageBackground, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ImageBackground,
+  TouchableOpacity,
+  useColorScheme,
+} from "react-native";
 import React, { useState } from "react";
 import LinearGradient from "react-native-linear-gradient";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
 import auth from "@react-native-firebase/auth";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { LoginManager, AccessToken } from "react-native-fbsdk-next";
 
 // ====================== Local Import =======================
 
 import { pngs } from "../../../assets/images/pngs/png";
-import { colors } from "../../../assets/colors/colors";
+import { colors } from "../../../constants/colors";
 import fonts from "../../../assets/fonts/fonts";
 import RNButton from "../../../components/RNButton";
-
-// ====================== END =================================
-
-// =================== SVGS IMPORT ===========================
-
 import FaceBook from "../../../assets/images/svgs/faceBook.svg";
 import Twitter from "../../../assets/images/svgs/twitter.svg";
 import Apple from "../../../assets/images/svgs/apple.svg";
-
+import Google from "../../../assets/images/svgs/google.svg";
 // ====================== END =================================
-
+GoogleSignin.configure({
+  webClientId:
+    "902895208558-8ukl5coips26qa12ngrqkl69qeuj1okq.apps.googleusercontent.com",
+});
 const SplashScreen = (props) => {
   const [isLoading, setIsLoading] = useState(false);
+  GoogleSignin.configure({
+    webClientId:
+      "902895208558-8ukl5coips26qa12ngrqkl69qeuj1okq.apps.googleusercontent.com",
+  });
 
-  // ================== Google auth ============================
+  const isDarkMode = useColorScheme() === "dark";
 
-  async function onGoogleButtonPress() {
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? colors.darker : colors.lighter,
+  };
+
+  const onGoogleButtonPress = async () => {
     // Get the users ID token
     const { idToken } = await GoogleSignin.signIn();
 
     // Create a Google credential with the token
     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(googleCredential);
-  }
+    const { accessToken } = await GoogleSignin.getTokens();
+    let accesstoken = accessToken;
+    let authentication = await auth().signInWithCredential(googleCredential);
 
-  // =================== END ===================================
+    // Sign-in the user with the credential
+    console.log({ accessToken: accesstoken, auth: authentication });
+  };
+
+  const onFacebookButtonPress = async () => {
+    // Attempt login with permissions
+    const result = await LoginManager.logInWithPermissions([
+      "public_profile",
+      "email",
+    ]);
+
+    if (result.isCancelled) {
+      throw "User cancelled the login process";
+    }
+
+    // Once signed in, get the users AccesToken
+    const data = await AccessToken.getCurrentAccessToken();
+
+    if (!data) {
+      throw "Something went wrong obtaining access token";
+    }
+
+    // Create a Firebase credential with the AccessToken
+    const facebookCredential = auth.FacebookAuthProvider.credential(
+      data.accessToken
+    );
+
+    // Sign-in the user with the credential
+    console.log(await auth().signInWithCredential(facebookCredential));
+  };
 
   return (
     <ImageBackground
@@ -56,36 +98,22 @@ const SplashScreen = (props) => {
         end={{ x: 0, y: 3 }}
       >
         <View style={styles.logoContainer}>
-          <Text style={styles.logoTextStyle}>LOGO</Text>
+          {/* <Text style={styles.logoTextStyle}>LOGO</Text> */}
         </View>
 
         <View style={styles.subContainer}>
           <View style={styles.svgContainer}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => onFacebookButtonPress()}>
               <FaceBook />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                onGoogleButtonPress()
-                  .then(() => {
-                    console.log("Signed in with Google!");
-                    const getCurrentUser = async () => {
-                      const currentUser = await GoogleSignin.getCurrentUser();
-                      console.log("Current user:  ", currentUser);
-                    };
-                  })
-                  .then(() => {
-                    props.navigation.navigate("LoginScreen");
-                  })
-              }
-            >
+            <TouchableOpacity onPress={() => onGoogleButtonPress()}>
+              <Google />
+            </TouchableOpacity>
+            <TouchableOpacity>
               <Apple />
             </TouchableOpacity>
             <TouchableOpacity>
               <Twitter />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <FaceBook />
             </TouchableOpacity>
           </View>
         </View>
@@ -93,7 +121,7 @@ const SplashScreen = (props) => {
         <View style={styles.footerContainer}>
           <RNButton
             isLoading={isLoading}
-            btnText="LogIn With Number"
+            btnText="Login With Number"
             textColor={colors.black}
             btnColor={colors.loginBtnColor}
             height={hp(6.4)}

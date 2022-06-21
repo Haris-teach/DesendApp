@@ -12,8 +12,12 @@ const RNButton = (props) => {
         backgroundColor: props.btnColor,
         justifyContent: props.justifyContent,
         marginTop: props.marginTop,
+        marginBottom: props.marginBottom,
+        alignSelf: props.alignSelf,
+        marginVertical: props.marginVertical,
       }}
       onPress={props.onPress}
+      disabled={props.isLoading}
     >
       {props.isLoading ? (
         <ActivityIndicator color="blue" />

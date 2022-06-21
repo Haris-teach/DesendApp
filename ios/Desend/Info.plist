@@ -20,12 +20,39 @@
 	<string>1.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.902895208558-f5j8kn6uorotdfs2ia3sl5rp1vhknh14</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fb3414473442113460</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FacebookAppID</key>
+	<string>3414473442113460</string>
+	<key>FacebookClientToken</key>
+	<string>380551d67e2f6a2d1b8496c1e539390c</string>
+	<key>LSApplicationCategoryType</key>
+	<string></string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>
@@ -35,10 +62,18 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Desend wants to use camera for capture and image and video</string>
 	<key>NSContactsUsageDescription</key>
 	<string>Desend use contacts for chat and call</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
+	<string>Desend wants to use location for send current location in chat</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Desend wants to use microphone for voice recording</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Desend wants to use photo library for chat</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Desend wants to use images and video for send in chat</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Poppins-Black.ttf</string>
@@ -66,6 +101,10 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
