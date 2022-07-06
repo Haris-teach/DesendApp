@@ -23,6 +23,7 @@ import * as ImagePicker from "react-native-image-picker";
 import moment, { now } from "moment";
 import Toast from "react-native-simple-toast";
 import Sound from "react-native-sound";
+import LottieView from "lottie-react-native";
 import { AudioRecorder, AudioUtils } from "react-native-audio";
 import { useIsFocused } from "@react-navigation/native";
 import {
@@ -91,6 +92,7 @@ var listner = () => {
 };
 
 const ChatRoom = (props, { navigation }) => {
+  var lottie = useRef();
   const dispatch = useDispatch();
   const isFocused = useIsFocused();
   adminId = props.route.params.adminId;
@@ -181,6 +183,7 @@ const ChatRoom = (props, { navigation }) => {
   const [sendVoice, setSendVoice] = useState(false);
   const [loadEarlier, setLoadEarlier] = useState(false);
   const [isLoadEarlier, setIsLoadEarlier] = useState(false);
+  const [isCurrentDocId, setIsCurrentDocId] = useState("");
 
   var count = 0;
 
@@ -249,6 +252,7 @@ const ChatRoom = (props, { navigation }) => {
         setSendVoice(true);
         // timer(false);
         setStartAudio(false);
+        setTimerState(0);
         await AudioRecorder.stopRecording();
       }
     } catch (err) {
@@ -298,7 +302,6 @@ const ChatRoom = (props, { navigation }) => {
           let color = resp.docs[0].data().bubbleColor;
           if (key in color) {
             setIsSenderBubbleColor(color[key]);
-            console.log(color[key]);
           } else {
             setIsSenderBubbleColor(color.key0);
           }
@@ -756,6 +759,7 @@ const ChatRoom = (props, { navigation }) => {
       }
 
       messages[position].duration = sound.getDuration();
+
       time = setInterval(() => {
         count = count + 1;
         setSliderValue(count);
@@ -764,19 +768,27 @@ const ChatRoom = (props, { navigation }) => {
 
         setMessages(messages);
       }, 1000);
+
+      let interval = setInterval(() => {
+        lottie.current.play();
+      }, 2000);
+
       sound.play((success) => {
         messages[position].isPlaying = false;
         messages[position].timer = 0;
         count = 0;
         setMessages(messages);
+        lottie.current.reset();
         setSliderValue(0);
         clearInterval(time);
+        clearInterval(interval);
       });
     });
   };
 
   const stopPlayer = (position) => {
     sound.stop();
+    lottie.current.reset();
     messages[position].isPlaying = false;
     setMessages(messages);
     setSliderValue(0);
@@ -879,7 +891,12 @@ const ChatRoom = (props, { navigation }) => {
                   </>
                 ) : null}
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(p.currentMessage.text)}
+                  onPress={() => {
+                    let temp = p.currentMessage.text.split(":");
+                    if (temp[0] == "http" || temp[0] == "https") {
+                      Linking.openURL(p.currentMessage.text);
+                    }
+                  }}
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
@@ -906,12 +923,14 @@ const ChatRoom = (props, { navigation }) => {
                 <View style={{ flexDirection: "row" }}>
                   <TouchableOpacity
                     onPress={() => {
+                      setIsCurrentDocId(p.currentMessage.docId);
                       for (let i = 0; i < messages.length; i++) {
                         if (messages[i].docId === p.currentMessage.docId) {
                           messages[i].isPlaying = !messages[i].isPlaying;
 
                           if (messages[i].isPlaying) {
                             startPlaying(messages[i].audio, i);
+
                             setCurrentAudioMessagePlayingId(
                               p.currentMessage.docId
                             );
@@ -951,8 +970,36 @@ const ChatRoom = (props, { navigation }) => {
                       </>
                     )}
                   </TouchableOpacity>
+                  <View
+                    style={{
+                      flex: 1,
 
-                  <Slider
+                      justifyContent: "center",
+                      height: hp(5),
+                    }}
+                  >
+                    {p.currentMessage.timer != 0 ? (
+                      <LottieView
+                        ref={lottie}
+                        source={require("../../../assets/images/sound-waves.json")}
+                        speed={0.5}
+                        style={{
+                          width: wp(50),
+                          alignSelf: "center",
+                        }}
+                      />
+                    ) : (
+                      <LottieView
+                        source={require("../../../assets/images/sound-waves.json")}
+                        style={{
+                          width: wp(50),
+                          alignSelf: "center",
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  {/* <Slider
                     maximumValue={p.currentMessage.duration}
                     minimumValue={0}
                     minimumTrackTintColor="#307ecc"
@@ -969,19 +1016,17 @@ const ChatRoom = (props, { navigation }) => {
                       height: hp(4),
                       alignSelf: "center",
                     }}
-                  />
+                  /> */}
                 </View>
 
-                {/* <Text>
+                <Text style={{ color: "black" }}>
                   00:
-                  {p.currentMessage.i
-                    ? "00"
-                    : sliderValue}
+                  {p.currentMessage.timer == 0 ? 0 : p.currentMessage.timer + 1}
                   /00:
-                  {voiceDuration == 0 && !p.currentMessage.isPlaying
+                  {p.currentMessage.i && !p.currentMessage.isPlaying
                     ? "00"
-                    : parseInt(voiceDuration)}
-                </Text> */}
+                    : parseInt(p.currentMessage.duration)}
+                </Text>
               </>
             )}
 
@@ -1187,17 +1232,19 @@ const ChatRoom = (props, { navigation }) => {
               <Text style={styles.popUpTextStyle}>Forward</Text>
               <Farword alignSelf="center" width={wp(5)} height={hp(5)} />
             </MenuOption>
-            <MenuOption
-              style={styles.popUpRowStyle}
-              onSelect={() => {
-                copyToClipboard(rowMap, data);
-              }}
-            >
-              <Text style={styles.popUpTextStyle} selectable={true}>
-                Copy
-              </Text>
-              <CopyIcon alignSelf="center" width={wp(5)} height={hp(5)} />
-            </MenuOption>
+            {prop.currentMessage.audio == null ? (
+              <MenuOption
+                style={styles.popUpRowStyle}
+                onSelect={() => {
+                  copyToClipboard(rowMap, data);
+                }}
+              >
+                <Text style={styles.popUpTextStyle} selectable={true}>
+                  Copy
+                </Text>
+                <CopyIcon alignSelf="center" width={wp(5)} height={hp(5)} />
+              </MenuOption>
+            ) : null}
             {data.item.text != "" ? (
               <MenuOption
                 style={styles.popUpRowStyle}
@@ -1512,7 +1559,10 @@ const ChatRoom = (props, { navigation }) => {
               Toast.BOTTOM
             );
           }
-        }).catch((e) => console.log(e));
+        }).catch((e) => {
+          const { code, message } = e;
+          Toast.showWithGravity(message, Toast.SHORT, Toast.BOTTOM);
+        });
       } else {
         Toast.showWithGravity(
           "Camera permission denied",
@@ -1701,7 +1751,9 @@ const ChatRoom = (props, { navigation }) => {
         ]);
       })
       .catch((error) => {
+        setIsLocLoading(false);
         const { code, message } = error;
+        Toast.showWithGravity(message, Toast.SHORT, Toast.BOTTOM);
       });
   };
 
@@ -1785,7 +1837,6 @@ const ChatRoom = (props, { navigation }) => {
       .where("chatId", "==", chatId)
       .get()
       .then((res) => {
-        console.log(res.docs[0].data().bubbleColor);
         obj = res.docs[0].data().bubbleColor;
         let key = "key" + currentUserId;
         obj[key] = color;

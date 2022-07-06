@@ -80,16 +80,9 @@ const ChatMainScreen = (props) => {
 
   useEffect(() => {
     GetThreads();
-    // let l = firestore()
-    //   .collection("chats")
-    //   .where("markasReadTo", "array-contains", currentUserId)
-    //   .onSnapshot((res) => {
-    //     console.log("RES:   ", res.docs[0].data().chatId);
-    //   });
     return () => {
       listner();
       GetThreads();
-      // l();
     };
   }, []);
 
@@ -105,7 +98,7 @@ const ChatMainScreen = (props) => {
         msgs = [];
         archiveMsgs = [];
         if (res.docs.length != 0) {
-          res.docs.forEach((i) => {
+          res.docs.forEach(async (i) => {
             const {
               chatId,
               visibleTo,
@@ -224,7 +217,8 @@ const ChatMainScreen = (props) => {
               ? item.otherProfile
               : item.user.avatar,
         }}
-        icon={data.item.markasReadTo.includes(currentUserId) ? <Read /> : null}
+        // icon={data.item.markasReadTo.includes(currentUserId) ? <Read /> : null}
+
         resizeMode="cover"
         imageWidth={wp(16)}
         imageHeight={wp(16)}
